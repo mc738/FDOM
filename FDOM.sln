@@ -6,6 +6,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Rendering.Razor", "FDO
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Rendering.Html", "FDOM.Rendering.Html\FDOM.Rendering.Html.fsproj", "{E983F532-BC1C-46F3-885B-93979CEFEFA0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{69C3B0DF-251F-48E8-B1F5-B26B67F319B7}"
+ProjectSection(SolutionItems) = preProject
+	README.md = README.md
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
