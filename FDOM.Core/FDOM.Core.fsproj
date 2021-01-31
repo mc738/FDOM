@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <Compile Include="Common.fs" />
+        <Compile Include="Dsl.fs" />
     </ItemGroup>
 
 </Project>
