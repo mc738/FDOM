@@ -61,6 +61,10 @@ module Article =
 
     let p content = General.p (Style.references []) content
 
+    let code content = General.p (Style.references [ "code" ]) content
+    
+    let quote content = General.p (Style.references [ "quote" ]) content
+    
     let ol items = General.ol (Style.references []) items
 
     let ul items = General.ul (Style.references []) items
@@ -73,6 +77,10 @@ module Article =
     let text content = DOM.createText content
 
     let span style content = DOM.createSpan style content
+    
+    let hl content = span (Style.references [ "hl" ]) content
+    
+    let bold content = span (Style.references [ "bold" ]) content
 
     let spans items = DOM.createSpans items
 
