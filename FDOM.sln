@@ -12,6 +12,12 @@ ProjectSection(SolutionItems) = preProject
 	LICENSE = LICENSE
 EndProjectSection
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Console", "FDOM.Console\FDOM.Console.fsproj", "{CD1029F2-58A5-4F41-A833-0CA8D37F8095}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.UnitTests", "FDOM.UnitTests\FDOM.UnitTests.fsproj", "{7129B259-4064-4FFB-BADE-16888DE3450B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.IntegrationTests", "FDOM.IntegrationTests\FDOM.IntegrationTests.fsproj", "{BEF94852-7008-4D9E-B156-CAA056C232A6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +36,17 @@ Global
 		{E983F532-BC1C-46F3-885B-93979CEFEFA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E983F532-BC1C-46F3-885B-93979CEFEFA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E983F532-BC1C-46F3-885B-93979CEFEFA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD1029F2-58A5-4F41-A833-0CA8D37F8095}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD1029F2-58A5-4F41-A833-0CA8D37F8095}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD1029F2-58A5-4F41-A833-0CA8D37F8095}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD1029F2-58A5-4F41-A833-0CA8D37F8095}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7129B259-4064-4FFB-BADE-16888DE3450B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7129B259-4064-4FFB-BADE-16888DE3450B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7129B259-4064-4FFB-BADE-16888DE3450B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7129B259-4064-4FFB-BADE-16888DE3450B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
