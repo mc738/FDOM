@@ -1,5 +1,6 @@
 module FDOM.UnitTests.Core.Parsing
 
+open FDOM.Core.Parsing
 open FDOM.Core.Parsing.BlockParser
 open Microsoft.VisualStudio.TestTools.UnitTesting
 

@@ -3,6 +3,7 @@ module FDOM.Core.Parsing
 open System
 open System.ComponentModel
 open System.Runtime.Serialization
+open System.Runtime.Serialization
 open System.Text
 open FDOM.Core.Common.Formatting
 
@@ -81,8 +82,9 @@ module BlockParser =
 
             handler ([], curr)
 
-    let private formatBlockText (formatters: Formatters) (lines: Line list) =
-        let preprocessor (line: Line) i = line.Text.Trim()
+
+    let private formatBlockText (preprocessors: Formatters) (formatters: Formatters) (lines: Line list) =
+        let preprocessor (line: Line) i = preprocessors.Run(line.Text)
             
             (*
             match line.Type with
@@ -173,7 +175,7 @@ module BlockParser =
     
     let tryParseBlock (input: Input) curr =
         
-        let formatter = formatBlockText (Formatters.DefaultFormatters())
+        let formatter = formatBlockText (Formatters.DefaultPreprocessors()) (Formatters.DefaultFormatters())
         
         let result =
             [ tryParseOrderedListItem formatter
@@ -191,15 +193,18 @@ module BlockParser =
         | Ok (token, i) -> Some(token, (i + 1))
         | Error _ -> None
 
-    let parseBlocks input =
-        let rec handler (state, i) =
-            match tryParseBlock input i with
-            | Some (token, next) -> handler (state @ [ token ], next)
-            | None -> state
 
-        handler ([], 0)
 
 /// The inline parse takes block tokens and creates a DOM.
-module InlineParse =
+module InlineParser =
     
     let i = ()
+
+
+let parseBlocks input =
+    let rec handler (state, i) =
+        match BlockParser.tryParseBlock input i with
+        | Some (token, next) -> handler (state @ [ token ], next)
+        | None -> state
+
+    handler ([], 0)

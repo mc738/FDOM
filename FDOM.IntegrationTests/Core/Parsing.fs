@@ -1,6 +1,7 @@
 module FDOM.IntegrationTests.Core.Parsing
 
 open System.IO
+open FDOM.Core.Parsing
 open FDOM.Core.Parsing.BlockParser
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
@@ -32,5 +33,3 @@ type BlockParsing () =
         let actual = parseBlocks input    
             
         Assert.AreEqual(expected, actual)
-        
-

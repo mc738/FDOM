@@ -190,6 +190,16 @@ module Formatting =
         static member Create(formatters) =
             { Items = formatters }
 
+        
+        static member DefaultPreprocessors() =
+            let regexMacros =
+                RegexReplaceFormatter.CreateFormatters([
+                    "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy")
+                ])
+        
+            Formatters.Create(List.concat [ regexMacros; [ Trim ] ])
+            
+        
         static member DefaultFormatters() =
             let regexReplacements = 
                 RegexReplaceFormatter.CreateFormatters([
@@ -198,12 +208,8 @@ module Formatting =
                     "\!(?=[A-Za-z0-9])","! "
                     "\?(?=[A-Za-z0-9])","? "
                 ])
-            let regexMacros =
-                RegexReplaceFormatter.CreateFormatters([
-                    "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy")
-                ])
         
-            Formatters.Create(List.concat [ [ Trim ]; regexReplacements; regexMacros ])
+            Formatters.Create(List.concat [ regexReplacements ])
             
            
         
