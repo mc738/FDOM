@@ -203,10 +203,12 @@ module Formatting =
         static member DefaultFormatters() =
             let regexReplacements = 
                 RegexReplaceFormatter.CreateFormatters([
-                    "\,(?=[A-Za-z0-9])",", "
-                    "\.(?=[A-Za-z0-9])",". "
-                    "\!(?=[A-Za-z0-9])","! "
-                    "\?(?=[A-Za-z0-9])","? "
+                    "\,(?=[A-Za-z0-9])",", " // Add space after , if missing.
+                    "\.(?=[A-Za-z0-9])",". " // Add space after . if missing.
+                    "\!(?=[A-Za-z0-9])","! " // Add space after ! if missing.
+                    "\?(?=[A-Za-z0-9])","? " // Add space after ? if missing.
+                    "^(\* )", "" // Strip leading `* `
+                    "^([0-9]\. )|^([0-9][0-9]\. )", "" // Strip leading `1. ` or `99. `
                 ])
         
             Formatters.Create(List.concat [ regexReplacements ])

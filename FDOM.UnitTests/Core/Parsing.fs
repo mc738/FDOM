@@ -45,7 +45,7 @@ type BlockParsing () =
         
         let input = Input.Create(["1. Hello, World!"])
         
-        let expected = [ BlockToken.OrderListItem "1. Hello, World!" ]
+        let expected = [ BlockToken.OrderListItem "Hello, World!" ]
         
         let actual = parseBlocks input
         
@@ -56,7 +56,7 @@ type BlockParsing () =
         
         let input = Input.Create(["99. Hello, World!"])
         
-        let expected = [ BlockToken.OrderListItem "99. Hello, World!" ]
+        let expected = [ BlockToken.OrderListItem "Hello, World!" ]
         
         let actual = parseBlocks input
         
@@ -67,7 +67,7 @@ type BlockParsing () =
         
         let input = Input.Create(["* Hello, World!"])
         
-        let expected = [ BlockToken.UnorderedListItem "* Hello, World!" ]
+        let expected = [ BlockToken.UnorderedListItem "Hello, World!" ]
         
         let actual = parseBlocks input
         
@@ -78,7 +78,7 @@ type BlockParsing () =
         
         let input = Input.Create(["* Hello, "; "World!" ])
         
-        let expected = [ BlockToken.UnorderedListItem "* Hello, World!" ]
+        let expected = [ BlockToken.UnorderedListItem "Hello, World!" ]
         
         let actual = parseBlocks input
         
@@ -122,7 +122,7 @@ type BlockParsing () =
         
         let input = Input.Create(["* Item 1."; "* Item 2."; ])
         
-        let expected = [ BlockToken.UnorderedListItem "* Item 1."; BlockToken.UnorderedListItem "* Item 2." ]
+        let expected = [ BlockToken.UnorderedListItem "Item 1."; BlockToken.UnorderedListItem "Item 2." ]
         
         let actual = parseBlocks input
         
@@ -134,7 +134,7 @@ type BlockParsing () =
         
         let input = Input.Create(["1. Item 1."; "2. Item 2."; ])
         
-        let expected = [ BlockToken.OrderListItem "1. Item 1."; BlockToken.OrderListItem "2. Item 2." ]
+        let expected = [ BlockToken.OrderListItem "Item 1."; BlockToken.OrderListItem "Item 2." ]
         
         let actual = parseBlocks input
         
