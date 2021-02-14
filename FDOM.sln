@@ -18,6 +18,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.UnitTests", "FDOM.Unit
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.IntegrationTests", "FDOM.IntegrationTests\FDOM.IntegrationTests.fsproj", "{BEF94852-7008-4D9E-B156-CAA056C232A6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{60C80C7F-EF2C-4D50-932B-DF01D2C8E0E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BEF94852-7008-4D9E-B156-CAA056C232A6} = {60C80C7F-EF2C-4D50-932B-DF01D2C8E0E5}
+		{7129B259-4064-4FFB-BADE-16888DE3450B} = {60C80C7F-EF2C-4D50-932B-DF01D2C8E0E5}
 	EndGlobalSection
 EndGlobal

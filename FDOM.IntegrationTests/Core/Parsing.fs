@@ -15,9 +15,9 @@ type BlockParsing () =
         let expected =
             [
                 BlockToken.Header "# Hello, World!"
-                BlockToken.Paragraph "Lorem ipsum dolor sit amet, consectetur adipiscing elit.Quisque non eleifend diam."
+                BlockToken.Paragraph "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque non eleifend diam."
                 BlockToken.Header "## The story continues..."
-                BlockToken.Paragraph "Duis a luctus purus. Sed euismod nisi non nulla aliquam tempor at sed augue.Nullam nulla turpis, consequat sit amet ultrices ut, mollis vel massa."
+                BlockToken.Paragraph "Duis a luctus purus. Sed euismod nisi non nulla aliquam tempor at sed augue. Nullam nulla turpis, consequat sit amet ultrices ut, mollis vel massa."
                 BlockToken.UnorderedListItem "* Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae;"
                 BlockToken.UnorderedListItem "* Ut sagittis augue sapien. Aliquam at justo facilisis, varius diam vel, fringilla ligula."
                 BlockToken.UnorderedListItem "* Pellentesque porttitor facilisis eros nec rhoncus."

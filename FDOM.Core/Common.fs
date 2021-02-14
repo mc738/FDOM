@@ -1,5 +1,7 @@
 ﻿namespace FDOM.Core.Common
 
+open System
+open System.Text.RegularExpressions
 
 [<RequireQualifiedAccess>]
 module DOM =
@@ -146,3 +148,63 @@ module DOM =
           Title = title
           Name = name
           Sections = sections }
+
+module Formatting =
+    
+    /// A regex replace formatter.
+    /// This will take a pattern and replace it with are replacement string.
+    type RegexReplaceFormatter =
+        { Pattern: string
+          Replacement: string }
+
+        static member CreateFormatters(data: (string * string) list) =
+              data
+              |> List.map (fun (p, r) -> Formatter.RegexReplace { Pattern = p; Replacement = r })
+        
+        member formatter.Run(input) =
+            Regex.Replace(input, formatter.Pattern, formatter.Replacement)
+
+    and StringReplaceFormatter =
+        { Pattern: string
+          Replacement: string }
+
+        static member CreateFormatters(data: (string * string) list) =
+              data
+              |> List.map (fun (p, r) -> Formatter.StringReplace { Pattern = p; Replacement = r })
+
+        member formatter.Run(input: string) = input.Replace(formatter.Pattern, formatter.Replacement)
+    
+    and Formatter =
+        | RegexReplace of RegexReplaceFormatter
+        | StringReplace of StringReplaceFormatter
+        | Trim
+        
+    let private formatterHandler formatter input =
+        match formatter with
+        | RegexReplace f -> f.Run(input)
+        | StringReplace f -> f.Run(input)
+        | Trim -> input.Trim()
+        
+    type Formatters =
+        { Items: Formatter list }
+        static member Create(formatters) =
+            { Items = formatters }
+
+        static member DefaultFormatters() =
+            let regexReplacements = 
+                RegexReplaceFormatter.CreateFormatters([
+                    "\,(?=[A-Za-z0-9])",", "
+                    "\.(?=[A-Za-z0-9])",". "
+                    "\!(?=[A-Za-z0-9])","! "
+                    "\?(?=[A-Za-z0-9])","? "
+                ])
+            let regexMacros =
+                RegexReplaceFormatter.CreateFormatters([
+                    "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy")
+                ])
+        
+            Formatters.Create(List.concat [ [ Trim ]; regexReplacements; regexMacros ])
+            
+           
+        
+        member formatters.Run(input) = formatters.Items |> List.fold (fun state f -> formatterHandler f state ) input

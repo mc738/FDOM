@@ -77,7 +77,7 @@ type BlockParsing () =
         
         let input = Input.Create(["* Hello, "; "World!" ])
         
-        let expected = [ BlockToken.UnorderedListItem "* Hello,World!" ]
+        let expected = [ BlockToken.UnorderedListItem "* Hello, World!" ]
         
         let actual = parseBlocks input
         

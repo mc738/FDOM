@@ -2,10 +2,14 @@ module FDOM.Core.Parsing
 
 open System
 open System.ComponentModel
+open System.Runtime.Serialization
 open System.Text
+open FDOM.Core.Common.Formatting
 
+/// The block parse takes lines and parses it into block tokens.
 module BlockParser =
 
+    [<RequireQualifiedAccess>]
     type LineType =
         | Header
         | Text
@@ -69,7 +73,6 @@ module BlockParser =
             handler ([], curr)
 
         member input.TryGetUntilNotTypeOrEnd(curr, lineType) =
-
             let rec handler (state, i) =
                 match input.TryGetLine i with
                 | Some l when l.Type <> lineType -> state, i
@@ -78,17 +81,27 @@ module BlockParser =
 
             handler ([], curr)
 
-    let cleanUp (lines: Line list) =
-        let sb =
-            // TODO Handle adding spaces after '.' and ','.
+    let private formatBlockText (formatters: Formatters) (lines: Line list) =
+        let preprocessor (line: Line) i = line.Text.Trim()
+            
+            (*
+            match line.Type with
+            | LineType.Header _ -> line.Text.Trim()
+            | LineType.Text _ -> line.Text.Trim()
+            | LineType.OrderedListItem _ -> line.Text.Trim()
+            | LineType.UnorderedListItem _ -> line.Text.Trim()
+            | LineType.Empty _ -> String.Empty
+            | _ -> line.Text.Trim()
+            *)                
+        let (sb, _) =
             lines
-            |> List.fold (fun (sb: StringBuilder) l ->
-                sb.Append(l.Text.Trim()) |> ignore
-                sb) (StringBuilder())
+            |> List.fold (fun ((sb: StringBuilder), i) l ->
+                sb.Append(preprocessor l i) |> ignore
+                (sb, i + 1)) (StringBuilder(), 0)
 
-        sb.ToString()
+        formatters.Run(sb.ToString())
 
-    let tryParseParagraph (input: Input) curr =
+    let tryParseParagraph (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.Text -> Error()
@@ -96,7 +109,7 @@ module BlockParser =
             let (lines, next) =
                 input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
 
-            Ok(BlockToken.Paragraph(cleanUp lines), next)
+            Ok(BlockToken.Paragraph(formatter lines), next)
 
     let tryParseHeaderBlock (input: Input) curr =
         match input.TryGetLine curr with
@@ -104,7 +117,7 @@ module BlockParser =
         | Some l when l.Type <> LineType.Header -> Error()
         | Some l -> Ok(BlockToken.Header l.Text, curr + 1)
 
-    let tryParseCodeBlock (input: Input) curr =
+    let tryParseCodeBlock (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.CodeBlockDelimited -> Error()
@@ -112,9 +125,9 @@ module BlockParser =
             let (lines, next) =
                 input.TryGetUntilTypeOrEnd(curr + 1, LineType.CodeBlockDelimited)
 
-            Ok(BlockToken.CodeBlock(cleanUp lines), next)
+            Ok(BlockToken.CodeBlock(formatter lines), next)
 
-    let tryParseOrderedListItem (input: Input) curr =
+    let tryParseOrderedListItem (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.OrderedListItem -> Error()
@@ -126,14 +139,14 @@ module BlockParser =
                 let (lines, next) =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr + 1, LineType.Text)
-                Ok(BlockToken.OrderListItem(cleanUp (l :: lines)), next)
+                Ok(BlockToken.OrderListItem(formatter (l :: lines)), next)
             | _ ->
                 let (lines, next) =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
-                Ok(BlockToken.OrderListItem(cleanUp (l :: lines)), next)
+                Ok(BlockToken.OrderListItem(formatter (l :: lines)), next)
                 
-    let tryParseUnorderedListItem (input: Input) curr =
+    let tryParseUnorderedListItem (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.UnorderedListItem -> Error()
@@ -145,12 +158,12 @@ module BlockParser =
                 let (lines, next) =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr + 1, LineType.Text)
-                Ok(BlockToken.UnorderedListItem(cleanUp (l :: lines)), next)
+                Ok(BlockToken.UnorderedListItem(formatter (l :: lines)), next)
             | _ ->
                 let (lines, next) =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
-                Ok(BlockToken.UnorderedListItem(cleanUp (l :: lines)), next)
+                Ok(BlockToken.UnorderedListItem(formatter (l :: lines)), next)
 
     let tryParseEmptyBlock (input: Input) curr =
         match input.TryGetLine curr with
@@ -159,12 +172,15 @@ module BlockParser =
         | _ -> Ok(BlockToken.Empty, curr)
     
     let tryParseBlock (input: Input) curr =
+        
+        let formatter = formatBlockText (Formatters.DefaultFormatters())
+        
         let result =
-            [ tryParseOrderedListItem
-              tryParseUnorderedListItem
-              tryParseCodeBlock
+            [ tryParseOrderedListItem formatter
+              tryParseUnorderedListItem formatter
+              tryParseCodeBlock formatter
               tryParseHeaderBlock
-              tryParseParagraph
+              tryParseParagraph formatter
               tryParseEmptyBlock ]
             |> List.fold (fun state h ->
                 match state with
@@ -182,3 +198,8 @@ module BlockParser =
             | None -> state
 
         handler ([], 0)
+
+/// The inline parse takes block tokens and creates a DOM.
+module InlineParse =
+    
+    let i = ()
