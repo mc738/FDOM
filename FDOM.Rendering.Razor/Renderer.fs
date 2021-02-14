@@ -28,30 +28,31 @@ module private Utils =
         
     let renderText (t: DOM.InlineText) = t.Content
     
-    let renderSpan s =
-        createFragment<DOM.InlineSpan> s (fun s b ->
-            b.OpenElement(1, "span")
+    let renderSpan s step (b: RenderTreeBuilder) =
+        b.AddContent(step, createFragment<DOM.InlineSpan> s (fun s b ->
+                b.OpenElement(1, "span")
+                let next =
+                    match handleStyle s.Style with
+                    | Some (tag, value) -> b.AddAttribute(2, tag, value); 3
+                    | None -> 2
+                b.AddContent(3, s.Content)
+                b.CloseElement()))
             
-            let next =
-                match handleStyle s.Style with
-                | Some (tag, value) -> b.AddAttribute(2, tag, value); 3
-                | None -> 2
-            
-            b.AddContent(3, s.Content)
-            b.CloseElement())
-        
+    (*
     let renderSpans s step (b: RenderTreeBuilder) =
         s |> List.fold (fun step span ->
             b.AddContent(step, renderSpan span)
             step + 1 ) step
+    *)
     
     let renderContentItem c step (b: RenderTreeBuilder) =
         match c with
         | DOM.InlineContent.Text t ->
             b.AddContent(step, (renderText t))
             step + 1
-        | DOM.InlineContent.Spans s ->
-            renderSpans s step b 
+        | DOM.InlineContent.Span s ->
+            renderSpan s step b
+            step + 1
             
     let renderContent c step (b: RenderTreeBuilder) =
         c |> List.fold (fun step item -> (renderContentItem item step b)) step

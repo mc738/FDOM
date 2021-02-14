@@ -3,8 +3,8 @@ module FDOM.Core.Parsing
 open System
 open System.ComponentModel
 open System.Runtime.Serialization
-open System.Runtime.Serialization
 open System.Text
+open FDOM.Core.Common
 open FDOM.Core.Common.Formatting
 
 /// The block parse takes lines and parses it into block tokens.
@@ -83,23 +83,12 @@ module BlockParser =
             handler ([], curr)
 
 
-    let private formatBlockText (preprocessors: Formatters) (formatters: Formatters) (lines: Line list) =
-        let preprocessor (line: Line) i = preprocessors.Run(line.Text)
-            
-            (*
-            match line.Type with
-            | LineType.Header _ -> line.Text.Trim()
-            | LineType.Text _ -> line.Text.Trim()
-            | LineType.OrderedListItem _ -> line.Text.Trim()
-            | LineType.UnorderedListItem _ -> line.Text.Trim()
-            | LineType.Empty _ -> String.Empty
-            | _ -> line.Text.Trim()
-            *)                
-        let (sb, _) =
+    let private formatBlockText (preprocessors: Formatters) (formatters: Formatters) (lines: Line list) =                
+        let sb =
             lines
-            |> List.fold (fun ((sb: StringBuilder), i) l ->
-                sb.Append(preprocessor l i) |> ignore
-                (sb, i + 1)) (StringBuilder(), 0)
+            |> List.fold (fun (sb: StringBuilder) l ->
+                sb.Append(preprocessors.Run(l.Text)) |> ignore
+                sb) (StringBuilder())
 
         formatters.Run(sb.ToString())
 
@@ -197,6 +186,53 @@ module BlockParser =
 
 /// The inline parse takes block tokens and creates a DOM.
 module InlineParser =
+    
+    
+    let controlChars = [ '_'; '*'; '`' ]
+    
+    let isChar (chars: char list) c =
+        chars
+        |> List.fold (fun state curr ->
+                match state with
+                | true -> true
+                | false -> curr = c 
+            ) false
+        
+    let isControlChar = isChar controlChars
+    
+    let inBounds (str: string) i =
+        match i with
+        | _ when i > 0 || i <= str.Length -> false
+        | _ -> true
+    
+    let getChar str i =
+        match inBounds str i with
+        | true -> Some(str.[i])
+        | false -> None
+    
+    let readUntilChar input character from =
+        let rec handler(i) =
+            match getChar input i with
+            | Some c when c = character -> i
+            | Some _ -> handler(i + 1)
+            | None -> input.Length - 1
+            
+        let endIndex = handler(from)
+        
+        input.[from..endIndex]
+    
+    
+    let parseInlineContent (input: string) =
+        
+        
+    
+        
+            
+        
+        DOM.InlineContent.Text  { Content = "" }
+    
+    
+    
     
     let i = ()
 

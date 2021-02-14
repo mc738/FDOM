@@ -39,12 +39,12 @@ module private Inline =
     let renderSpan (span: DOM.InlineSpan) =
         sprintf "<span%s>%s</span>" (renderStyle span.Style) span.Content
 
-    let renderSpans (spans: DOM.InlineSpan list) = (spans |> List.map renderSpan) +> ""
+    //let renderSpans (spans: DOM.InlineSpan list) = (spans |> List.map renderSpan) +> ""
 
     let renderInlineContent (content: DOM.InlineContent) =
         match content with
         | DOM.Text t -> renderText t
-        | DOM.Spans s -> renderSpans s
+        | DOM.Span s -> renderSpan s
 
     let renderInlineItems (items: DOM.InlineContent list) =
         (items |> List.map renderInlineContent) +> ""

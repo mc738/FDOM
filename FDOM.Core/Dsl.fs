@@ -39,8 +39,6 @@ module General =
 
     let span style content = DOM.createSpan style content
 
-    let spans items = DOM.createSpans items
-
     let document name title style sections =
         DOM.createDocument style title name sections
     
@@ -81,8 +79,6 @@ module Article =
     let hl content = span (Style.references [ "hl" ]) content
     
     let bold content = span (Style.references [ "bold" ]) content
-
-    let spans items = DOM.createSpans items
 
     let document name title style sections =
         DOM.createDocument style title name sections

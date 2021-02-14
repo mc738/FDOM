@@ -62,7 +62,7 @@ module DOM =
 
     and InlineContent =
         | Text of InlineText
-        | Spans of InlineSpan list
+        | Span of InlineSpan
 
 
     //and Block =
@@ -133,9 +133,7 @@ module DOM =
 
     let createText text = InlineContent.Text { Content = text }
 
-    let createSpan style text = { Style = style; Content = text }
-
-    let createSpans spans = InlineContent.Spans spans
+    let createSpan style text = InlineContent.Span { Style = style; Content = text }
 
     let createSection style title name content =
         { Style = style
