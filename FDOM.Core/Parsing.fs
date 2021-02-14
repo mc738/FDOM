@@ -5,6 +5,7 @@ open System.ComponentModel
 open System.Runtime.Serialization
 open System.Text
 open FDOM.Core.Common
+open FDOM.Core.Common
 open FDOM.Core.Common.Formatting
 
 /// The block parse takes lines and parses it into block tokens.
@@ -187,7 +188,6 @@ module BlockParser =
 /// The inline parse takes block tokens and creates a DOM.
 module InlineParser =
     
-    
     let controlChars = [ '_'; '*'; '`' ]
     
     let isChar (chars: char list) c =
@@ -202,7 +202,7 @@ module InlineParser =
     
     let inBounds (str: string) i =
         match i with
-        | _ when i > 0 || i <= str.Length -> false
+        | _ when i < 0 || i >= str.Length -> false
         | _ -> true
     
     let getChar str i =
@@ -210,29 +210,101 @@ module InlineParser =
         | true -> Some(str.[i])
         | false -> None
     
-    let readUntilChar input character from =
+    let lookAhead str i count = getChar str (i + count)
+    
+    let lookBack str i count = getChar str (i - count)
+    
+    let compareLookAhead str (pattern: string) i =
+        match i > 0, inBounds str (i + pattern.Length) with
+        | true, true ->
+            let s = str.[i..(i + pattern.Length - 1)]
+            s = pattern
+        | _ -> false   
+        
+    /// Read from a index until a specified character.
+    /// This returns the sub string and either index of the character of the next index alone if `inclusive is set to true`.
+    let readUntilChar input character inclusive from =
         let rec handler(i) =
             match getChar input i with
             | Some c when c = character -> i
             | Some _ -> handler(i + 1)
-            | None -> input.Length - 1
+            | None -> input.Length
             
         let endIndex = handler(from)
         
-        input.[from..endIndex]
+        (input.[from..(endIndex - 1)], if inclusive then endIndex + 1 else endIndex)
     
+    
+    let readUntilCtrlChar input from =
+        let rec handler(i) =
+            match getChar input i with
+            | Some c when isControlChar c -> i
+            | Some _ -> handler(i + 1)
+            | None -> input.Length
+            
+        let endIndex = handler(from)
+        
+        (input.[from..(endIndex - 1)], endIndex) 
+
+    /// Read from a index until a string.
+    /// This returns the sub string and either index of the character of the next index alone if `inclusive is set to true`.   
+    let readUntilString input (pattern: string) inclusive from =
+        let peek = compareLookAhead input pattern
+        let rec handler(i) =
+            match inBounds input (pattern.Length + i) with
+            | true ->
+                match peek i with
+                | true -> i
+                | false -> handler(i + 1)
+            | false -> input.Length
+            
+        let endIndex = handler(from + pattern.Length - 1)
+        
+        (input.[(from + pattern.Length)..(endIndex - 1)], if inclusive then (endIndex + pattern.Length) else endIndex) 
+        
+    
+    //type 
     
     let parseInlineContent (input: string) =
+
+        // Cycle through input,
+        // ` is completely delimited (
         
+        let rec handler(state, i) =
+            match getChar input i with
+            | Some c ->
+                // 
+                let (newState, next) =
+                    match c with
+                    | '*' ->
+                        let ((sub, next), classes) =
+                            match lookAhead input i 1, lookAhead input i 2 with
+                            | Some(c1), Some(c2) when c1 = '*' && c2 = '*' -> readUntilString input "***" true i, [ "b"; "i" ]
+                            | Some(c1), _ when c1 = '*' -> readUntilString input "**" true i, [ "b" ]
+                            | _ -> readUntilChar input '*' true i, [ "i" ]
+                        
+                        let content = DOM.InlineContent.Span { Content = sub; Style = DOM.Style.Ref classes  }
+                        (state @ [ content ], next)
+                    | '`' ->
+                        let (sub, next) = readUntilChar input '`' true (i + 1)                    
+                        // Make this a span
+                        let content = DOM.InlineContent.Span { Content = sub; Style = DOM.Style.Ref [ "code" ]  }
+                        (state @ [ content ], next)
+                    | _ ->
+                        let (sub, next) = readUntilCtrlChar input i
+                        
+                        let content = DOM.InlineContent.Text { Content = sub } 
+                        
+                       
+                        
+                        (state @ [ content ], next)
+    
+                
+                            
+                handler(newState, next)
+            | None -> state
         
-    
-        
-            
-        
-        DOM.InlineContent.Text  { Content = "" }
-    
-    
-    
+        handler([], 0)
     
     let i = ()
 

@@ -1,5 +1,7 @@
 module FDOM.UnitTests.Core.Parsing
 
+open FDOM.Core.Common
+open FDOM.Core.Common
 open FDOM.Core.Parsing
 open FDOM.Core.Parsing.BlockParser
 open Microsoft.VisualStudio.TestTools.UnitTesting
@@ -137,5 +139,38 @@ type BlockParsing () =
         let expected = [ BlockToken.OrderListItem "Item 1."; BlockToken.OrderListItem "Item 2." ]
         
         let actual = parseBlocks input
+        
+        Assert.AreEqual(expected, actual)
+        
+[<TestClass>]
+type InlineParsing () =
+    
+    [<TestMethod>]
+    member this.``Parse bold content`` () =
+        
+        let input = "Hello, **World**!"
+        
+        let expected = [
+            DOM.InlineContent.Text { Content = "Hello, " }
+            DOM.InlineContent.Span { Content = "World"; Style = DOM.Style.Ref [ "b" ]  }
+            DOM.InlineContent.Text { Content = "!" }
+        ]
+        
+        let actual = InlineParser.parseInlineContent input
+        
+        Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]    
+    member this.``Parse inline code`` () =
+        
+        let input = "Hello, `World`!"
+        
+        let expected = [
+            DOM.InlineContent.Text { Content = "Hello, " }
+            DOM.InlineContent.Span { Content = "World"; Style = DOM.Style.Ref [ "code" ]  }
+            DOM.InlineContent.Text { Content = "!" }
+        ]
+        
+        let actual = InlineParser.parseInlineContent input
         
         Assert.AreEqual(expected, actual)
