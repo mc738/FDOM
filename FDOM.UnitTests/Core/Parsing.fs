@@ -160,6 +160,37 @@ type InlineParsing () =
         
         Assert.AreEqual(expected, actual)
 
+    [<TestMethod>]
+    member this.``Parse italic content`` () =
+        
+        let input = "Hello, *World*!"
+        
+        let expected = [
+            DOM.InlineContent.Text { Content = "Hello, " }
+            DOM.InlineContent.Span { Content = "World"; Style = DOM.Style.Ref [ "i" ]  }
+            DOM.InlineContent.Text { Content = "!" }
+        ]
+        
+        let actual = InlineParser.parseInlineContent input
+        
+        Assert.AreEqual(expected, actual)
+    
+    
+    [<TestMethod>]
+    member this.``Parse bold italic content`` () =
+        
+        let input = "Hello, ***World***!"
+        
+        let expected = [
+            DOM.InlineContent.Text { Content = "Hello, " }
+            DOM.InlineContent.Span { Content = "World"; Style = DOM.Style.Ref [ "b"; "i" ]  }
+            DOM.InlineContent.Text { Content = "!" }
+        ]
+        
+        let actual = InlineParser.parseInlineContent input
+        
+        Assert.AreEqual(expected, actual)
+    
     [<TestMethod>]    
     member this.``Parse inline code`` () =
         

@@ -281,7 +281,7 @@ module InlineParser =
                             match lookAhead input i 1, lookAhead input i 2 with
                             | Some(c1), Some(c2) when c1 = '*' && c2 = '*' -> readUntilString input "***" true i, [ "b"; "i" ]
                             | Some(c1), _ when c1 = '*' -> readUntilString input "**" true i, [ "b" ]
-                            | _ -> readUntilChar input '*' true i, [ "i" ]
+                            | _ -> readUntilChar input '*' true (i + 1), [ "i" ]
                         
                         let content = DOM.InlineContent.Span { Content = sub; Style = DOM.Style.Ref classes  }
                         (state @ [ content ], next)
