@@ -262,7 +262,6 @@ module InlineParser =
         
         (input.[(from + pattern.Length)..(endIndex - 1)], if inclusive then (endIndex + pattern.Length) else endIndex) 
         
-    
     //type 
     
     let parseInlineContent (input: string) =
@@ -294,20 +293,13 @@ module InlineParser =
                         let (sub, next) = readUntilCtrlChar input i
                         
                         let content = DOM.InlineContent.Text { Content = sub } 
-                        
-                       
-                        
+                                        
                         (state @ [ content ], next)
-    
-                
-                            
+        
                 handler(newState, next)
             | None -> state
         
         handler([], 0)
-    
-    let i = ()
-
 
 let parseBlocks input =
     let rec handler (state, i) =
@@ -316,3 +308,6 @@ let parseBlocks input =
         | None -> state
 
     handler ([], 0)
+    
+    
+//let createDom (tokens: BlockToken list)
