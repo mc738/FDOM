@@ -336,15 +336,33 @@ module Processing =
     open FDOM.Core.Dsl
     open FDOM.Core.Dsl.General
     
+    let getHeaderType (str : string) =
+        
+        let rec handler count (innerStr : char list) =
+            match innerStr.[0] with
+            | '#' -> handler (count + 1) innerStr.Tail
+            | _ -> count
+            
+        let hType = handler 0 (str |> List.ofSeq)
+        
+        (hType, str.Substring(hType + 1))
+    
     let createHeaderContent (value : string) =
-        // Get the header count
-        h1 false Style.none (InlineParser.parseInlineContent value) 
+        let (hType, content) = getHeaderType value
+        match hType with
+        | 1 -> h1 false Style.none (InlineParser.parseInlineContent content) 
+        | 2 -> h2 false Style.none (InlineParser.parseInlineContent content) 
+        | 3 -> h3 false Style.none (InlineParser.parseInlineContent content) 
+        | 4 -> h4 false Style.none (InlineParser.parseInlineContent content) 
+        | 5 -> h5 false Style.none (InlineParser.parseInlineContent content) 
+        | 6 -> h6 false Style.none (InlineParser.parseInlineContent content) 
+        | _ -> h6 false Style.none (InlineParser.parseInlineContent content) 
        
     let createParagraphContent (value : string) =
         p Style.none (InlineParser.parseInlineContent value)
         
     let createCodeBlock (value : string) =
-        p (Style.references [ "code" ]) (InlineParser.parseInlineContent value)
+        p (Style.references [ "codeblock" ]) (InlineParser.parseInlineContent value)
  
     let createListItem (value : string) =
         li Style.none (InlineParser.parseInlineContent value)
@@ -356,20 +374,17 @@ module Processing =
         ul Style.none (values |> List.map createListItem)
       
     let rec collectOrderedListItems (collected : string list) (remaining : BlockParser.BlockToken list) =
-        printfn "Rec test 1"
         match remaining.Head with
         | BlockParser.BlockToken.OrderListItem v ->
             collectOrderedListItems (collected @ [ v ])  remaining.Tail
         | _ -> (collected, remaining)
     
     let rec collectUnorderedListItems (collected : string list) (remaining : BlockParser.BlockToken list) =
-        printfn "Rec test 2"
         match remaining.Head with
         | BlockParser.BlockToken.UnorderedListItem v ->
             collectUnorderedListItems (collected @ [ v ]) remaining.Tail
         | _ -> (collected, remaining)
-    
-    
+       
     let private append (blocks : DOM.BlockContent list) block =
         blocks @ [ block ]
      
@@ -397,10 +412,6 @@ module Processing =
                 handler(append processedBlocks newBlock, newRemainingBlocks)
                 
         handler([], blocks)
-        
-        
-        
-
 
 type Parser(blocks : BlockParser.BlockToken list) =
     
