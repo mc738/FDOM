@@ -111,7 +111,6 @@ module DOM =
     let createH6 indexed style content =
         createHeader HeaderLevel.H6 indexed style content
 
-
     let createParagraph style content =
         BlockContent.Paragraph { Style = style; Content = content }
 
@@ -197,7 +196,6 @@ module Formatting =
         
             Formatters.Create(List.concat [ regexMacros; [ Trim ] ])
             
-        
         static member DefaultFormatters() =
             let regexReplacements = 
                 RegexReplaceFormatter.CreateFormatters([
@@ -211,6 +209,4 @@ module Formatting =
         
             Formatters.Create(List.concat [ regexReplacements ])
             
-           
-        
         member formatters.Run(input) = formatters.Items |> List.fold (fun state f -> formatterHandler f state ) input
