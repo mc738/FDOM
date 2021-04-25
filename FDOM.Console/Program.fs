@@ -4,8 +4,42 @@ open System
 open System.IO
 open System.Text.RegularExpressions
 open FDOM.Core.Parsing
+open FDOM.Core.Styles
 open FDOM.Rendering
 
+module JsonTests =
+    
+    open System.Text.Json
+    
+
+    
+    
+    
+    type String with
+    
+        member str.WriteToJson(writer : Utf8JsonWriter, name : string) =
+            writer.WriteString(name, str)
+    
+    
+    
+    
+    let parse (json : string) =
+        
+        let doc = JsonDocument.Parse(json)
+        
+        match doc.RootElement.TryGetProperty "version" with
+        | Some prop, true -> ()
+        | _, false -> ()
+        
+        let version = 
+        
+        doc.RootElement.GetInt32()
+        
+
+
+
+
+// TODO make tests.
 let getHeaderType (str : string) =
     
     let rec handler count (innerStr : char list) =
@@ -20,6 +54,8 @@ let getHeaderType (str : string) =
 
 [<EntryPoint>]
 let main argv =
+
+    let namedStyle = NamedStyle.Example.GetSelector()
 
     let (count1, result1) = getHeaderType "# Hello, World!"
     let (count2, result2) = getHeaderType "## Hello, World!"

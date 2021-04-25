@@ -20,6 +20,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.IntegrationTests", "FD
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{60C80C7F-EF2C-4D50-932B-DF01D2C8E0E5}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Storage", "FDOM.Storage\FDOM.Storage.fsproj", "{2D6868DE-F980-49B1-A291-CE842C55E593}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FDOM.Shared", "FDOM.Shared\FDOM.Shared.csproj", "{E6ED5D9B-DD54-4B5E-9A16-1C90AF7BFA34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +54,14 @@ Global
 		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEF94852-7008-4D9E-B156-CAA056C232A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D6868DE-F980-49B1-A291-CE842C55E593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D6868DE-F980-49B1-A291-CE842C55E593}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D6868DE-F980-49B1-A291-CE842C55E593}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D6868DE-F980-49B1-A291-CE842C55E593}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6ED5D9B-DD54-4B5E-9A16-1C90AF7BFA34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6ED5D9B-DD54-4B5E-9A16-1C90AF7BFA34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6ED5D9B-DD54-4B5E-9A16-1C90AF7BFA34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6ED5D9B-DD54-4B5E-9A16-1C90AF7BFA34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BEF94852-7008-4D9E-B156-CAA056C232A6} = {60C80C7F-EF2C-4D50-932B-DF01D2C8E0E5}

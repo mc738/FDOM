@@ -5,7 +5,7 @@
         <IsPackable>false</IsPackable>
         <GenerateProgramFile>false</GenerateProgramFile>
         <RootNamespace>FDOM.Tests</RootNamespace>
-        <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
+        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>

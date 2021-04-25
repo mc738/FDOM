@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "name": "Test document",
+  "sections": [
+    {
+      "style": {
+        "type": "default"
+      },
+      "name": "Section 1",
+      "content": [
+        {
+          "type": "p",
+          "style": {
+            "type": "custom",
+            "data": {
+              "height": "20px",
+              "width": "30px",
+              "padding": "1rem"
+            }
+          },
+          "content": [
+            {
+              "type": "text",
+              "value": "..."
+            },
+            {
+              "type": "span",
+              "value": "...",
+              "style": ""
+            }
+          ]
+        },
+        {
+          "type": "ul",
+          "items": [
+            {
+              "content": [
+                {
+                  "type": "text",
+                  "value": "..."
+                }
+              ]
+            },
+            {
+              "content": [
+                {
+                  "type": "text",
+                  "value": "..."
+                }
+              ]
+            },
+            {
+              "content": [
+                {
+                  "type": "text",
+                  "value": "..."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "p",
+          "style": {
+            "type": "ref",
+            "selectors": [
+              "class-1",
+              "class-2"
+            ]
+          },
+          "content": [
+            {
+              "type": "text",
+              "value": "..."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
