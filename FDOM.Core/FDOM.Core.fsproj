@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Utils.fs" />
         <Compile Include="Common.fs" />
         <Compile Include="Styles.fs" />
         <Compile Include="Dsl.fs" />

@@ -1,24 +1,13 @@
 module FDOM.Core.Serialization
 
 open System.IO
-open System.Reflection.Metadata
 open System.Text.Json
-open System.Xml.XPath
 open FDOM.Core
 open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Dsl
+
 
 [<AutoOpen>]
+/// A collection of helper functions for `System.Text.Json`
 module JsonHelpers =
 
     let tryGetProperty (name: string) (element: JsonElement) =
@@ -209,15 +198,6 @@ module private Internal =
         let missingTypeSpecificProperty typeName name propertyName =
             $"`{name}` {typeName} types require a `{propertyName}` property."
 
-    let collectResults (results: Result<'a, 'b> list) =
-        results
-        |> List.fold
-            (fun (ok, err) r ->
-                match r with
-                | Ok r -> (ok @ [ r ], err)
-                | Error e -> (ok, err @ [ e ]))
-            ([], [])
-
     let tryGetName = tryGetStringProperty "name"
 
     let tryGetType = tryGetStringProperty "type"
@@ -241,6 +221,12 @@ module private Internal =
         handler writer
         writer.WriteEndObject()
 
+
+[<AutoOpen>]
+/// Extensions for core `FDOM` types to handle serialization.
+/// These are used to serialize documents to json using `System.Text.Json`
+module Extensions =    
+    
     type DOM.Style with
 
         static member FromJson(element: JsonElement) =
@@ -301,7 +287,6 @@ module private Internal =
         member text.WriteToJson(writer: Utf8JsonWriter) =
             writer.WriteString("type", "text")
             writer.WriteString("value", text.Content)
-
 
     type DOM.InlineSpan with
 
@@ -377,7 +362,7 @@ module private Internal =
                 let (content, errors) =
                     ce
                     |> List.map DOM.InlineContent.FromJson
-                    |> collectResults
+                    |> Utils.collectResults
 
                 Ok(
                     { Level = l
@@ -420,7 +405,7 @@ module private Internal =
                 let (content, errors) =
                     ce
                     |> List.map DOM.InlineContent.FromJson
-                    |> collectResults
+                    |> Utils.collectResults
 
                 Ok(
                     { Style = DOM.Style.FromJsonWithDefault se
@@ -448,7 +433,7 @@ module private Internal =
                 let (content, errors) =
                     ce
                     |> List.map DOM.InlineContent.FromJson
-                    |> collectResults
+                    |> Utils.collectResults
 
                 Ok(
                     { Style = DOM.Style.FromJsonWithDefault se
@@ -481,7 +466,7 @@ module private Internal =
                 let (items, errors) =
                     i
                     |> List.map DOM.ListItem.FromJson
-                    |> collectResults
+                    |> Utils.collectResults
 
                 Ok(
                     { Style = DOM.Style.FromJsonWithDefault se
@@ -552,7 +537,7 @@ module private Internal =
                 let (content, errors) =
                     ce
                     |> List.map DOM.BlockContent.FromJson
-                    |> collectResults
+                    |> Utils.collectResults
                 Ok(
                     { Name = n
                       Title = title
@@ -590,7 +575,7 @@ module private Internal =
                 let (sections, errors) =
                     ce
                     |> List.map DOM.Section.FromJson
-                    |> collectResults
+                    |> Utils.collectResults
                 Ok(
                     { Name = n
                       Title = title
