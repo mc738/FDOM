@@ -64,11 +64,6 @@ module DOM =
         | Text of InlineText
         | Span of InlineSpan
 
-
-    //and Block =
-    //    | Block of BlockContent
-    //    | Inline of InlineContent list
-
     and Section =
         { Style: Style
           Title: HeaderBlock option
@@ -80,7 +75,6 @@ module DOM =
           Title: HeaderBlock option
           Name: string
           Sections: Section list }
-
 
     /// A helper to create a header block.
     /// The function is set up to allow partial application.

@@ -2,38 +2,13 @@
 
 open System
 open System.IO
+open System.Text.Json
 open System.Text.RegularExpressions
 open FDOM.Core.Parsing
 open FDOM.Core.Styles
+open FDOM.Core.Serialization
 open FDOM.Rendering
 
-module JsonTests =
-    
-    open System.Text.Json
-    
-
-    
-    
-    
-    type String with
-    
-        member str.WriteToJson(writer : Utf8JsonWriter, name : string) =
-            writer.WriteString(name, str)
-    
-    
-    
-    
-    let parse (json : string) =
-        
-        let doc = JsonDocument.Parse(json)
-        
-        match doc.RootElement.TryGetProperty "version" with
-        | Some prop, true -> ()
-        | _, false -> ()
-        
-        let version = 
-        
-        doc.RootElement.GetInt32()
         
 
 
@@ -87,6 +62,11 @@ let main argv =
                   Name = "Section 1"
                   Content = blocks } ] }
 
+    //Serializer.WriteToFile(doc, "/home/max/Data/FDOM_Tests/test.json")
+    
+    let t = Serializer.Deserialize(File.ReadAllText("/home/max/Data/FDOM_Tests/test.json"))     
+    printfn "Test: %A" t
+        
     let stylesheets = [
         "css/main.css"
         "css/style.css"
