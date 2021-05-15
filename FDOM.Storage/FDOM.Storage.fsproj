@@ -6,12 +6,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Library.fs" />
+        <Compile Include="Common.fs" />
         <Compile Include="Sqlite.fs" />
+        <Compile Include="Documents.fs" />
+        <Compile Include="Resources.fs" />
+        <Compile Include="BlobStore.fs" />
+        <Compile Include="Context.fs" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FDOM.Core\FDOM.Core.fsproj" />
     </ItemGroup>
 
 </Project>

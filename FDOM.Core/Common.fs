@@ -143,7 +143,7 @@ module DOM =
 module Formatting =
     
     /// A regex replace formatter.
-    /// This will take a pattern and replace it with are replacement string.
+    /// This will take a pattern and replace it with a replacement string.
     type RegexReplaceFormatter =
         { Pattern: string
           Replacement: string }
@@ -155,6 +155,8 @@ module Formatting =
         member formatter.Run(input) =
             Regex.Replace(input, formatter.Pattern, formatter.Replacement)
 
+    /// A string replace formatter.
+    /// This will take a string and replace it with a replacement string.
     and StringReplaceFormatter =
         { Pattern: string
           Replacement: string }
@@ -165,6 +167,7 @@ module Formatting =
 
         member formatter.Run(input: string) = input.Replace(formatter.Pattern, formatter.Replacement)
     
+    /// A formatter that can be used to transform text.
     and Formatter =
         | RegexReplace of RegexReplaceFormatter
         | StringReplace of StringReplaceFormatter

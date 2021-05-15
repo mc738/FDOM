@@ -1,6 +1,7 @@
 namespace FDOM.Core
 
 [<RequireQualifiedAccess>]
+/// A collection of utility functions. In time these can be moved to `FUtil` or replaced with the equivalent. 
 module Utils =
     
     /// A helper function to separate a list of Result<'Type, 'Error>.

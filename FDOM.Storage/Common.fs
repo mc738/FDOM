@@ -1,22 +1,31 @@
-module FDOM.Storage.Sqlite
+module FDOM.Storage.Common
 
-open System
 open System.IO
 open System.Security.Cryptography
 open System.Text
-open FDOM.Core.Common
 open Microsoft.Data.Sqlite
 
+
+module private Helpers =
+    let bytesToHex (bytes: byte array) =
+        bytes
+        |> Array.fold (fun (sb: StringBuilder) b -> sb.AppendFormat("{0:x2}", b)) (StringBuilder(bytes.Length * 2))
+        |> fun sb -> sb.ToString()
+
+    let generateHash (hasher: SHA256) (bytes: byte array) = hasher.ComputeHash bytes |> bytesToHex
+
+
 [<AutoOpen>]
-module Common =
+module Sqlite =
+
     type InitializationStatement =
-        { Name: string
-          Sql: string }
-        
-        member query.Execute(connection : SqliteConnection) =
-            use comm = new SqliteCommand(query.Sql, connection)
-            comm.ExecuteNonQuery() |> ignore
-    
+            { Name: string
+              Sql: string }
+            
+            member query.Execute(connection : SqliteConnection) =
+                use comm = new SqliteCommand(query.Sql, connection)
+                comm.ExecuteNonQuery() |> ignore
+
     type Query<'p, 'r> =
         { Name: string
           Sql: string
@@ -76,32 +85,3 @@ module Common =
                 new SqliteBlob(connection, query.TableName, query.ColumnName, rowId)
 
             data.CopyTo(writeStream)
-
-[<RequireQualifiedAccess>]
-module InitializationStatements =
-
-    let filesTable =
-        { Name = "Create files table."
-          Sql = """
-            CREATE TABLE files (
-	            name TEXT NOT NULL,
-	            "path" TEXT NOT NULL,
-	            extension TEXT NOT NULL,
-	            "size" INTEGER NOT NULL,
-	            hash INTEGER NOT NULL,
-	            blob_data BLOB NOT NULL
-            );
-            """ }
-
-module Internal =
-    
-    let insertResourceQuery = {
-        Name = "insert_blob"
-        Sql = """
-        
-        """
-        ParameterMapper = (fun () -> Map.empty)
-        TableName = "resources"
-        ColumnName = "resource_blob"
-    }
-
