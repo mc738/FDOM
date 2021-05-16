@@ -70,9 +70,19 @@ let documentStoreTest =
     //ds.Initialize()
     ()
 
+
+let auditTest =
+    
+    let ds = DocumentStore.Open("/home/max/Data/FDOM_Tests/blob_store/20210516210440.db")
+
+    let dupBlobs = ds.GetDuplicateBlobs()
+    
+    printfn "Duplicate blobs: %A" dupBlobs
+
 [<EntryPoint>]
 let main argv =
-
+    
+    auditTest
     // documentStoreTest
 
     // blobStoreTest
@@ -165,14 +175,12 @@ let main argv =
     
     File.WriteAllText(renderedDocPath, html)
 
-    let qh = QueryHandler.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
+    //let qh = QueryHandler.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
 
-    let ds = DocumentStore(qh)
+    let ds = DocumentStore.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
 
-    ds.Initialize()
+    let docRef = ds.AddDocument(doc, false, [ renderedDocPath ])
     
-    ds.AddDocument(doc, false, [ renderedDocPath ])
+    ds.AddDocumentVersion(docRef, doc, 1, 1, 0, "test", [ renderedDocPath ]) |> ignore
     
-    //printfn "Result: %A" matches
-
     0 // return an integer exit code

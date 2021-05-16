@@ -1,5 +1,6 @@
 namespace FDOM.Storage
 
+open System
 open System.IO
 open System.Security.Cryptography
 open FDOM.Core
@@ -15,12 +16,72 @@ type DocumentStore(qh: QueryHandler) =
     let resourceHandler = ResourceHandler(qh)
     let documentHandler = DocumentHandler(qh)
 
+    static member Create(path) =
+        let qh = QueryHandler.Create(path)
+        let ds = DocumentStore(qh)
+        ds.Initialize()
+        ds
+    
+    static member Open(path) =
+        let qh = QueryHandler.Open(path)
+        DocumentStore(qh)
+        
     member ds.Initialize() =
         blobStore.Initialize() |> ignore
         resourceHandler.Initialize()
         documentHandler.Initialize()
 
     member ds.AddResource() = ()
+
+    member ds.AddDocumentVersion
+        (
+            docRef: Guid,
+            document: DOM.Document,
+            major: int,
+            minor: int,
+            revision: int,
+            suffix: string,
+            renderedDocuments: string list
+        ) =
+
+        use ms = new MemoryStream()
+
+        Serialization.Serializer.Serialize(ms, document)
+
+        let blobRef =
+            blobStore.AddBlob("documents", $"{document.Name}_fdom", ".json", ms)
+
+        let versionRef =
+            documentHandler.AddDocumentVersion(docRef, major, minor, 0, suffix, blobRef)
+
+        // TODO handle import errors.
+        // Add resources.
+        let (_, resourceErrs) =
+            document.Resources
+            |> List.map
+                (fun r ->
+                    match blobStore.ImportFile("resources", r.Path) with
+                    | Ok ref ->
+                        // Add the resource and version resource link.
+                        let resourceRef =
+                            resourceHandler.AddResource(r.Name, r.VirtualPath, ref)
+
+                        documentHandler.AddDocumentVersionResource(versionRef, resourceRef)
+                        Ok()
+                    | Error e -> Error e)
+            |> Utils.collectResults
+
+        // Add rendered documents.
+        let (_, renderedDocumentErrs) =
+            renderedDocuments
+            |> List.map
+                (fun rd ->
+                    match blobStore.ImportFile("rendered_documents", rd) with
+                    | Ok ref -> Ok(documentHandler.AddRenderedDocument(versionRef, ref))
+                    | Error e -> Error e)
+            |> Utils.collectResults
+
+        versionRef
 
     /// Add a new document.
     member ds.AddDocument(document: DOM.Document, isDraft: bool, renderedDocuments: string list) =
@@ -36,46 +97,21 @@ type DocumentStore(qh: QueryHandler) =
         // TODO this is not proper url encoding.
         let docRef =
             documentHandler.AddDocument(document.Name, document.Name.Replace(' ', '_'))
-
+        
         let (major, minor, suffix) =
             match isDraft with
             | true -> 0, 1, "draft"
             | false -> 1, 0, ""
 
-        let versionRef =
-            documentHandler.AddDocumentVersion(docRef, major, minor, 0, suffix, blobRef)
-
-        // TODO handle import errors.
-        // Add resources.
-        let (_, resourceErrs) =
-            document.Resources
-            |> List.map (fun r ->
-                match blobStore.ImportFile("resources", r.Path) with
-                | Ok ref ->
-                    // Add the resource and version resource link.
-                    let resourceRef = resourceHandler.AddResource(r.Name, r.VirtualPath, ref)
-                    documentHandler.AddDocumentVersionResource(versionRef, resourceRef)
-                    Ok ()
-                | Error e -> Error e)
-            |> Utils.collectResults
-
-        // Add rendered documents.
-        let (_, renderedDocumentErrs) =
-            renderedDocuments
-            |> List.map (fun rd ->
-                match blobStore.ImportFile("rendered_documents", rd) with
-                | Ok ref -> Ok (documentHandler.AddRenderedDocument(versionRef, ref))
-                | Error e -> Error e
-                )
-            |> Utils.collectResults
-            
-        ()    
-        
-
-    member ds.AddDocumentVersion() = ()
+        ds.AddDocumentVersion(docRef, document, major, minor, 0, suffix, renderedDocuments) |> ignore
+        docRef
 
     /// Get the latest version of a document.
-    member ds.GetDocument() = ()
+    member ds.GetDocument() =
+        
+        
+        
+        ()
 
     /// Get a specific version of a document.
     member ds.GetDocumentVersion() = ()
@@ -85,3 +121,5 @@ type DocumentStore(qh: QueryHandler) =
     member ds.AddBlob() = ()
 
     member ds.GetBlob() = ()
+
+    member ds.GetDuplicateBlobs() = blobStore.GetDuplicateBlobs()

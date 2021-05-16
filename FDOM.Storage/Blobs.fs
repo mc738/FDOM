@@ -43,7 +43,11 @@ type BlobOverview =
     { Reference: Guid
       Bucket: string
       Name: string
-      Ext: string }
+      Hash: string
+      ContentTypeName: string
+      Ext: string
+      HttpContentType: string
+      CreatedOnUtc: DateTime }
 
 type GetBlobQuery = { BlobRef: Guid }
 
@@ -160,6 +164,55 @@ module Internal =
 
                 t.InsertList("content_types", seedContentTypes))
 
+module Auditing =
+
+
+    let getHashOccurrences = """
+    SELECT
+      hash,
+      COUNT(*) AS `occurrences`
+    FROM
+      blob_store bs
+    GROUP BY
+      hash
+    """
+
+    let getBlobByHash = """
+    SELECT
+        b.reference,
+        b.name,
+        b.bucket,
+        b.hash,
+        ct.name as content_type_name,
+        ct.ext,
+        ct.http_content_type,
+        b.created_on_utc
+    FROM blob_store b
+    JOIN content_types ct ON b.ext = ct.ext
+    WHERE b.hash = @hash;
+    """
+
+    type HashOccurence = { Hash: string; Occurrences: int }
+
+    type BlobHashQuery = { Hash: string }
+
+    type DuplicateBlobs =
+        { Hash: HashOccurence
+          Blobs: BlobOverview list }
+
+    let getDuplicateHashes (qh: QueryHandler) =
+        let hashOccurrences =
+            qh.SelectSql<HashOccurence>(getHashOccurrences)
+
+        hashOccurrences
+        |> List.filter (fun h -> h.Occurrences > 1)
+        |> List.map
+            (fun h ->
+                { Hash = h
+                  Blobs = qh.SelectVerbatim<BlobOverview, BlobHashQuery>(getBlobByHash, { Hash = h.Hash }) })
+
+
+
 
 type BlobStore(qh: QueryHandler, hasher: SHA256) =
 
@@ -178,7 +231,7 @@ type BlobStore(qh: QueryHandler, hasher: SHA256) =
         match File.Exists path with
         | true ->
             let fi = FileInfo(path)
-            Ok (bs.AddBlob(bucket, Path.GetFileNameWithoutExtension path, fi.Extension, File.OpenRead(path)))
+            Ok(bs.AddBlob(bucket, Path.GetFileNameWithoutExtension path, fi.Extension, File.OpenRead(path)))
         | false -> Error $"File '{path}' could not be found."
 
     member bs.GetBlob(reference: Guid) =
@@ -200,3 +253,6 @@ type BlobStore(qh: QueryHandler, hasher: SHA256) =
         """
 
         qh.SelectSingleVerbatim<Blob, GetBlobQuery>(sql, { BlobRef = reference })
+
+    member _.GetDuplicateBlobs() = Auditing.getDuplicateHashes qh
+    

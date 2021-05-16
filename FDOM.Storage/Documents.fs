@@ -104,10 +104,10 @@ module Internal =
 
 type DocumentHandler(qh: QueryHandler) =
 
-    member dh.Initialize() = Internal.initialize qh
+    member _.Initialize() = Internal.initialize qh
 
     /// Add a document to the database.
-    member dh.AddDocument(name: string, url: string) =
+    member _.AddDocument(name: string, url: string) =
         let docRef = Guid.NewGuid()
 
         qh.Insert<Internal.NewDocument>(
@@ -119,7 +119,7 @@ type DocumentHandler(qh: QueryHandler) =
 
         docRef
 
-    member db.AddDocumentVersion(docRef: Guid, major: int, minor: int, revision: int, suffix: string, blobRef: Guid) =
+    member _.AddDocumentVersion(docRef: Guid, major: int, minor: int, revision: int, suffix: string, blobRef: Guid) =
         let versionRef = Guid.NewGuid()
 
         qh.Insert<Internal.NewDocumentVersion>(
