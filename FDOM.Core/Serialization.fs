@@ -580,7 +580,8 @@ module Extensions =
                     { Name = n
                       Title = title
                       Style = DOM.Style.FromJsonWithDefault se
-                      Sections = sections }: DOM.Document
+                      Sections = sections
+                      Resources = [] }: DOM.Document // TODO add serialization for resources.
                 )
             | None, _, _ -> Error "Missing `style` property."
             | _, None, _ -> Error "Missing `name` property."
@@ -606,7 +607,6 @@ type Serializer() =
         let json = (JsonDocument.Parse json).RootElement
         DOM.Document.FromJson(json)
         
-
     static member Serialize(stream: Stream, document: DOM.Document) =
         let mutable options = JsonWriterOptions()
         options.Indented <- true

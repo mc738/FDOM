@@ -70,11 +70,19 @@ module DOM =
           Name: string
           Content: BlockContent list }
 
+    and Resource = {
+        Name: string
+        Path: string
+        VirtualPath: string
+        Type: string
+    }
+    
     and Document =
         { Style: Style
           Title: HeaderBlock option
           Name: string
-          Sections: Section list }
+          Sections: Section list
+          Resources: Resource list }
 
     /// A helper to create a header block.
     /// The function is set up to allow partial application.
@@ -123,7 +131,6 @@ module DOM =
     let createImage style source =
         BlockContent.Image { Source = source; Style = style }
 
-
     let createText text = InlineContent.Text { Content = text }
 
     let createSpan style text = InlineContent.Span { Style = style; Content = text }
@@ -134,11 +141,12 @@ module DOM =
           Name = name
           Content = content }
 
-    let createDocument style title name sections =
+    let createDocument style title name sections resources =
         { Style = style
           Title = title
           Name = name
-          Sections = sections }
+          Sections = sections
+          Resources = resources }
 
 module Formatting =
     
