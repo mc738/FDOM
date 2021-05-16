@@ -197,6 +197,14 @@ module BlockParser =
         | Ok (token, i) -> Some(token, (i + 1))
         | Error _ -> None
 
+    let parseBlocks input =
+        let rec handler (state, i) =
+            match tryParseBlock input i with
+            | Some (token, next) -> handler (state @ [ token ], next)
+            | None -> state
+            
+        handler ([], 0)
+
 /// The inline parse takes block tokens and creates a DOM.
 module InlineParser =
 
@@ -422,6 +430,6 @@ type Parser(blocks : BlockParser.BlockToken list) =
             | Some (token, next) -> handler (state @ [ token ], next)
             | None -> state
 
-        Parser(handler ([], 0))
+        Parser(BlockParser.parseBlocks input)
     
     member parser.CreateBlockContent() = Processing.processBlocks blocks
