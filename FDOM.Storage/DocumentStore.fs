@@ -5,6 +5,7 @@ open System.IO
 open System.Security.Cryptography
 open FDOM.Core
 open FDOM.Core.Common
+open FDOM.Storage.Documents.Internal
 open FLite.Core
 open FDOM.Storage.Blobs
 open FDOM.Storage.Resources
@@ -41,18 +42,22 @@ type DocumentStore(qh: QueryHandler) =
             minor: int,
             revision: int,
             suffix: string,
-            renderedDocuments: string list
+            renderedDocuments: DOM.RenderedDocument list
         ) =
 
         use ms = new MemoryStream()
 
+        let filePath = $"{document.SnakeCaseName}/{major}_{minor}_{revision}"
+        
         Serialization.Serializer.Serialize(ms, document)
 
         let blobRef =
-            blobStore.AddBlob("documents", $"{document.Name}_fdom", ".json", ms)
+            blobStore.AddBlob("documents", $"{document.SnakeCaseName}_fdom", ".json", ms)
 
+        blobStore.AddVirtualFile($"{filePath}/.artifacts/{document.SnakeCaseName}_fdom.json", blobRef)
+        
         let versionRef =
-            documentHandler.AddDocumentVersion(docRef, major, minor, 0, suffix, blobRef)
+            documentHandler.AddDocumentVersion(docRef, major, minor, revision, suffix, blobRef)
 
         // TODO handle import errors.
         // Add resources.
@@ -64,9 +69,10 @@ type DocumentStore(qh: QueryHandler) =
                     | Ok ref ->
                         // Add the resource and version resource link.
                         let resourceRef =
-                            resourceHandler.AddResource(r.Name, r.VirtualPath, ref)
+                            resourceHandler.AddResource(r.Name, $"{filePath}/{r.VirtualPath}", ref)
 
                         documentHandler.AddDocumentVersionResource(versionRef, resourceRef)
+                        blobStore.AddVirtualFile($"{filePath}/{r.VirtualPath}", ref)
                         Ok()
                     | Error e -> Error e)
             |> Utils.collectResults
@@ -76,27 +82,32 @@ type DocumentStore(qh: QueryHandler) =
             renderedDocuments
             |> List.map
                 (fun rd ->
-                    match blobStore.ImportFile("rendered_documents", rd) with
-                    | Ok ref -> Ok(documentHandler.AddRenderedDocument(versionRef, ref))
+                    match blobStore.ImportFile("rendered_documents", rd.Path) with
+                    | Ok ref ->
+                        documentHandler.AddRenderedDocument(versionRef, ref)
+                        blobStore.AddVirtualFile($"{filePath}/{rd.VirtualPath}", ref)
+                        Ok()
                     | Error e -> Error e)
             |> Utils.collectResults
 
         versionRef
 
     /// Add a new document.
-    member ds.AddDocument(document: DOM.Document, isDraft: bool, renderedDocuments: string list) =
+    member ds.AddDocument(document: DOM.Document, isDraft: bool, renderedDocuments: DOM.RenderedDocument list) =
         // Serialize the document to json and add as a blob.
-        use ms = new MemoryStream()
+        //use ms = new MemoryStream()
 
-        Serialization.Serializer.Serialize(ms, document)
+        //let filePath = $"{document.SnakeCaseName}/{major}_{minor}_{revision}"
+        
+        //Serialization.Serializer.Serialize(ms, document)
 
-        let blobRef =
-            blobStore.AddBlob("documents", $"{document.Name}_fdom", ".json", ms)
+        //let blobRef =
+        //    blobStore.AddBlob("documents", $"{document.Name}_fdom", ".json", ms)
 
         // Add the document and an initial version.
         // TODO this is not proper url encoding.
         let docRef =
-            documentHandler.AddDocument(document.Name, document.Name.Replace(' ', '_'))
+            documentHandler.AddDocument(document.Name, document.SnakeCaseName)
         
         let (major, minor, suffix) =
             match isDraft with
@@ -107,11 +118,7 @@ type DocumentStore(qh: QueryHandler) =
         docRef
 
     /// Get the latest version of a document.
-    member ds.GetDocument() =
-        
-        
-        
-        ()
+    member ds.GetDocument() = ()
 
     /// Get a specific version of a document.
     member ds.GetDocumentVersion() = ()
@@ -123,3 +130,5 @@ type DocumentStore(qh: QueryHandler) =
     member ds.GetBlob() = ()
 
     member ds.GetDuplicateBlobs() = blobStore.GetDuplicateBlobs()
+
+    member ds.GetVirtualFile(path) = blobStore.GetVirtualFile(path)

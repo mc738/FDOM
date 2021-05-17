@@ -101,7 +101,7 @@ module Internal =
     let initializeVirtualFileSystem = """
     CREATE TABLE virtual_fs (
 	    file_path TEXT NOT NULL,
-        blob_reference TEXT NOT NULL
+        blob_reference TEXT NOT NULL,
 	    CONSTRAINT virtual_fs_PK PRIMARY KEY (file_path),
         CONSTRAINT virtual_fs_FK FOREIGN KEY (blob_reference) REFERENCES blob_store(reference)
     );
@@ -161,8 +161,18 @@ module Internal =
 
                 t.ExecuteSqlNonQuery(initializeBlobStore)
                 |> ignore
-
+                
+                t.ExecuteSqlNonQuery(initializeVirtualFileSystem)
+                |> ignore
+                
                 t.InsertList("content_types", seedContentTypes))
+
+    type NewVirtualFile = {
+        FilePath: string
+        BlobReference: Guid
+    }
+
+    type VirtualFileQuery = { FilePath: string }    
 
 module Auditing =
 
@@ -211,9 +221,6 @@ module Auditing =
                 { Hash = h
                   Blobs = qh.SelectVerbatim<BlobOverview, BlobHashQuery>(getBlobByHash, { Hash = h.Hash }) })
 
-
-
-
 type BlobStore(qh: QueryHandler, hasher: SHA256) =
 
 
@@ -256,3 +263,27 @@ type BlobStore(qh: QueryHandler, hasher: SHA256) =
 
     member _.GetDuplicateBlobs() = Auditing.getDuplicateHashes qh
     
+    member _.AddVirtualFile(path: string, blobRef: Guid) =
+        qh.Insert<Internal.NewVirtualFile>("virtual_fs", { FilePath = path; BlobReference = blobRef })
+        
+    member _.GetVirtualFile(path: string) =
+        let sql = """
+        SELECT
+            bs.reference,
+            bs.name,
+            bs.bucket,
+            bs."raw",
+            bs.hash,
+            ct.name as content_type_name,
+            ct.ext,
+            ct.http_content_type,
+            bs.created_on_utc
+        FROM virtual_fs vf 
+        JOIN blob_store bs ON vf.blob_reference = bs.reference
+        JOIN content_types ct ON bs.ext = ct.ext
+        WHERE vf.file_path = @file_path;
+        """
+        let r = qh.SelectVerbatim<Blob, Internal.VirtualFileQuery>(sql, { FilePath = path })
+        match r.Length > 0 with
+        | true -> Some r.Head
+        | false -> None

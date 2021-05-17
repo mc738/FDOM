@@ -8,7 +8,7 @@ This allows for a shared document format the can be easily extended for various 
 
 Features include:
 
-* Create documents from various sources including simplified `markdown`
+* Create documents from various sources including simplified `markdown`.
 * Render documents into various formats include `html`.
 * Store and retrieve versioned documents and related resources.
 * Various `dsl`'s to help with integrate `FDOM` into various workflows.

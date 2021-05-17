@@ -84,6 +84,13 @@ module DOM =
           Sections: Section list
           Resources: Resource list }
 
+        with member doc.SnakeCaseName = doc.Name.ToLower().Replace(' ', '_')
+        
+    type RenderedDocument = {
+        Path: string
+        VirtualPath: string
+    }    
+        
     /// A helper to create a header block.
     /// The function is set up to allow partial application.
     /// For example:

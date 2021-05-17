@@ -5,6 +5,7 @@ open System.IO
 open System.Security.Cryptography
 open System.Text.Json
 open System.Text.RegularExpressions
+open FDOM.Core.Common
 open FDOM.Core.Parsing
 open FDOM.Core.Styles
 open FDOM.Core.Serialization
@@ -70,19 +71,10 @@ let documentStoreTest =
     //ds.Initialize()
     ()
 
-
-let auditTest =
-    
-    let ds = DocumentStore.Open("/home/max/Data/FDOM_Tests/blob_store/20210516210440.db")
-
-    let dupBlobs = ds.GetDuplicateBlobs()
-    
-    printfn "Duplicate blobs: %A" dupBlobs
-
 [<EntryPoint>]
 let main argv =
     
-    auditTest
+    // auditTest
     // documentStoreTest
 
     // blobStoreTest
@@ -121,11 +113,11 @@ let main argv =
                   Content = blocks } ]
           Resources =
               [ { Name = "main_css"
-                  Path = ""
-                  VirtualPath = "css/main.css"
+                  Path = "/home/max/Data/FDOM_Tests/css/style.css"
+                  VirtualPath = "css/style.css"
                   Type = "stylesheet" }
                 { Name = "style_css"
-                  Path = ""
+                  Path = "/home/max/Data/FDOM_Tests/css/main.css"
                   VirtualPath = "css/main.css"
                   Type = "stylesheet" }
                 { Name = "index_js"
@@ -158,11 +150,11 @@ let main argv =
 
     let stylesheets = doc.Resources
                       |> List.filter (fun r -> r.Type = "stylesheet")
-                      |> List.map (fun r -> r.VirtualPath)
+                      |> List.map (fun r -> $"{doc.SnakeCaseName}/{r.VirtualPath}")
                       
     let scripts = doc.Resources
                   |> List.filter (fun r -> r.Type = "script")
-                  |> List.map (fun r -> r.VirtualPath)
+                  |> List.map (fun r -> $"{doc.SnakeCaseName}/{r.VirtualPath}")
         
     let layout : Html.Layout =
         { Head = "<section id=\"sidebar\"><small>Main</small></section><main><small>Main</small>"
@@ -179,8 +171,12 @@ let main argv =
 
     let ds = DocumentStore.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
 
-    let docRef = ds.AddDocument(doc, false, [ renderedDocPath ])
+    let rendererDocs: DOM.RenderedDocument list = [
+        { Path = renderedDocPath; VirtualPath = "index.html" }
+    ]
     
-    ds.AddDocumentVersion(docRef, doc, 1, 1, 0, "test", [ renderedDocPath ]) |> ignore
+    let docRef = ds.AddDocument(doc, false, rendererDocs)
+    
+    //ds.AddDocumentVersion(docRef, doc, 1, 1, 0, "test", [ renderedDocPath ]) |> ignore
     
     0 // return an integer exit code
