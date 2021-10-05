@@ -63,17 +63,110 @@ let blobStoreTest =
 *)
 
 let documentStoreTest =
+    let blocks =
+        Parser
+            .ParseLines(File.ReadAllLines("C:\\Users\\44748\\Projects\FDOM\\FDOM.IntegrationTests\\test_article_1.md")
+                        |> List.ofArray)
+            .CreateBlockContent()
 
+    let doc : FDOM.Core.Common.DOM.Document =
+        { Style = FDOM.Core.Common.DOM.Style.Default
+          Name = "Test parsed document"
+          Title = None
+          Sections =
+              [ { Style = FDOM.Core.Common.DOM.Style.Default
+                  Title = None
+                  Name = "Section 1"
+                  Content = blocks } ]
+          Resources =
+              [ { Name = "main_css"
+                  Path = "/home/max/Data/FDOM_Tests/css/style.css"
+                  VirtualPath = "css/style.css"
+                  Type = "stylesheet" }
+                { Name = "style_css"
+                  Path = "/home/max/Data/FDOM_Tests/css/main.css"
+                  VirtualPath = "css/main.css"
+                  Type = "stylesheet" }
+                { Name = "index_js"
+                  Path = "/home/max/Data/FDOM_Tests/js/index.js"
+                  VirtualPath = "js/index.js"
+                  Type = "script" }
+                { Name = "main_js"
+                  Path = "/home/max/Data/FDOM_Tests/js/main.js"
+                  VirtualPath = "js/main.js"
+                  Type = "script" }
+                { Name = "original"
+                  Path = "/home/max/Projects/FDOM/FDOM.IntegrationTests/test_article_1.md"
+                  VirtualPath = "articles/test_article_1.md"
+                  Type = "artifact" }
+                { Name = "image_1"
+                  Path = "/home/max/Data/FDOM_Tests/images/live_server.png"
+                  VirtualPath = "img/image_1.png"
+                  Type = "image" }
+                { Name = "image_2"
+                  Path = "/home/max/Data/FDOM_Tests/images/R2CSeU4JMFB4QX2uiIDODJkqTgwXW67fhYDeLYpgvfI.webp"
+                  VirtualPath = "img/image_2.webp"
+                  Type = "image" } ] }
     //let qh = QueryHandler.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
 
     //let ds = DocumentStore(qh)
-
+    //
+    
     //ds.Initialize()
     ()
+
+let pdfTest _ =
+    let blocks =
+        Parser
+            .ParseLines(File.ReadAllLines("C:\\Users\\44748\\Projects\FDOM\\FDOM.IntegrationTests\\test_article_1.md")
+                        |> List.ofArray)
+            .CreateBlockContent()
+
+    let doc : FDOM.Core.Common.DOM.Document =
+        { Style = FDOM.Core.Common.DOM.Style.Default
+          Name = "Test parsed document"
+          Title = None
+          Sections =
+              [ { Style = FDOM.Core.Common.DOM.Style.Default
+                  Title = None
+                  Name = "Section 1"
+                  Content = blocks } ]
+          Resources =
+              [ { Name = "main_css"
+                  Path = "/home/max/Data/FDOM_Tests/css/style.css"
+                  VirtualPath = "css/style.css"
+                  Type = "stylesheet" }
+                { Name = "style_css"
+                  Path = "/home/max/Data/FDOM_Tests/css/main.css"
+                  VirtualPath = "css/main.css"
+                  Type = "stylesheet" }
+                { Name = "index_js"
+                  Path = "/home/max/Data/FDOM_Tests/js/index.js"
+                  VirtualPath = "js/index.js"
+                  Type = "script" }
+                { Name = "main_js"
+                  Path = "/home/max/Data/FDOM_Tests/js/main.js"
+                  VirtualPath = "js/main.js"
+                  Type = "script" }
+                { Name = "original"
+                  Path = "/home/max/Projects/FDOM/FDOM.IntegrationTests/test_article_1.md"
+                  VirtualPath = "articles/test_article_1.md"
+                  Type = "artifact" }
+                { Name = "image_1"
+                  Path = "/home/max/Data/FDOM_Tests/images/live_server.png"
+                  VirtualPath = "img/image_1.png"
+                  Type = "image" }
+                { Name = "image_2"
+                  Path = "/home/max/Data/FDOM_Tests/images/R2CSeU4JMFB4QX2uiIDODJkqTgwXW67fhYDeLYpgvfI.webp"
+                  VirtualPath = "img/image_2.webp"
+                  Type = "image" } ] }
+        
+    Pdf.render $"C:\\ProjectData\\TestPDFs\\{DateTime.Now.ToFileTime()}.pdf" "C:\\Users\\44748\\Projects\\PDFBuilder\\styles.json" doc
 
 [<EntryPoint>]
 let main argv =
     
+    pdfTest ()
     // auditTest
     // documentStoreTest
 

@@ -14,6 +14,7 @@
       <ProjectReference Include="..\..\FLite\FLite.Core\FLite.Core.fsproj" />
       <ProjectReference Include="..\FDOM.Core\FDOM.Core.fsproj" />
       <ProjectReference Include="..\FDOM.Rendering.Html\FDOM.Rendering.Html.fsproj" />
+      <ProjectReference Include="..\FDOM.Rendering.Pdf\FDOM.Rendering.Pdf.fsproj" />
       <ProjectReference Include="..\FDOM.Storage\FDOM.Storage.fsproj" />
     </ItemGroup>
 
