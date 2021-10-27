@@ -22,4 +22,3 @@ module Utils =
                 | Ok r -> (ok @ [ r ], err)
                 | Error e -> (ok, err @ [ e ]))
             ([], [])
-

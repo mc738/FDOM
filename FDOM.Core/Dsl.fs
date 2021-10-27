@@ -42,7 +42,6 @@ module General =
     let document name title style sections =
         DOM.createDocument style title name sections
     
-
 /// A dsl for creating articles.    
 module Article =
     let h1 content = General.h1 true (Style.references []) content

@@ -42,8 +42,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FreDF.Core", "..\FreDF\FreD
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Freql.Sqlite", "..\Freql\Freql.Sqlite\Freql.Sqlite.fsproj", "{A0332154-AB54-46A3-8DAB-DC6F4F56D521}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FDOM.Intergrations.DotNet", "FDOM.Intergrations.DotNet\FDOM.Intergrations.DotNet.fsproj", "{68B07EB7-17B6-43DF-8D8E-A336BD13F138}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,10 +108,6 @@ Global
 		{A0332154-AB54-46A3-8DAB-DC6F4F56D521}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0332154-AB54-46A3-8DAB-DC6F4F56D521}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0332154-AB54-46A3-8DAB-DC6F4F56D521}.Release|Any CPU.Build.0 = Release|Any CPU
-		{68B07EB7-17B6-43DF-8D8E-A336BD13F138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{68B07EB7-17B6-43DF-8D8E-A336BD13F138}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{68B07EB7-17B6-43DF-8D8E-A336BD13F138}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{68B07EB7-17B6-43DF-8D8E-A336BD13F138}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BEF94852-7008-4D9E-B156-CAA056C232A6} = {60C80C7F-EF2C-4D50-932B-DF01D2C8E0E5}
