@@ -1,0 +1,26 @@
+Tests (17 tests) Failed: 1 test failed
+  FDOM.IntegrationTests (1 test) Success
+    FDOM.IntegrationTests.Core (1 test) Success
+      Parsing (1 test) Success
+        BlockParsing (1 test) Success
+          Parse test article 1 Success
+  FDOM.UnitTests (16 tests) Failed: 1 test failed
+    FDOM.UnitTests.Core (16 tests) Failed: 1 test failed
+      BlockParsing (12 tests) Failed: 1 test failed
+        Parse 2 ordered list items Success
+        Parse 2 paragraph with double empty line Success
+        Parse 2 unordered list items Success
+        Parse code block Success
+        Parse h1 single line Success
+        Parse h2 single line Success
+        Parse header and paragraph Success
+        Parse ordered list double digit single line Success
+        Parse ordered list single line Success
+        Parse paragraph single line Failed: Assert.AreEqual failed. Expected:<[Paragraph "Hello, World!"] (Microsoft.FSharp.Collections.FSharpList`1[[FDOM.Core.Parsing+BlockParser+BlockT...
+        Parse unordered list 2 lines Success
+        Parse unordered list single line Success
+      InlineParsing (4 tests) Success
+        Parse bold content Success
+        Parse bold italic content Success
+        Parse inline code Success
+        Parse italic content Success

@@ -26,9 +26,9 @@ module General =
 
     let p style content = DOM.createParagraph style content
 
-    let ol style items = DOM.createUnorderedList style items
+    let ol style items = DOM.createOrderedList style items
 
-    let ul style items = DOM.createOrderedList style items
+    let ul style items = DOM.createUnorderedList style items
 
     let li style content = DOM.createListItem style content
 

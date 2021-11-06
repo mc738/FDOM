@@ -2,6 +2,7 @@
 module FDOM.Rendering.Html
 
 open FDOM.Core.Common
+open Fluff.Core
 
 type Layout = { Head: string; Foot: string }
 
@@ -140,3 +141,22 @@ let render (layout: Layout) (stylesheets: string list) (scriptSources: string li
       renderBody layout document.Sections
       renderFoot scripts ]
     +> ""
+
+let renderFromTemplate (template: string) (values: Mustache.Data) (stylesheets: string list) (scriptSources: string list) (document: DOM.Document) =
+    let links =
+        (stylesheets |> List.map renderStylesheetReference)
+        +> ""
+
+    let scripts =
+        (scriptSources |> List.map renderScriptReference)
+        +> ""
+        
+    let renderArticle content =
+            [ "<article>"
+              (content |> List.map renderSection) +> ""
+              "</article>" ]
+            +> ""
+           
+    let data = {values with Values = values.Values.Add("content", renderArticle document.Sections |> Mustache.Value.Scalar) }
+    Mustache.replace data  true (Mustache.parse template)
+    

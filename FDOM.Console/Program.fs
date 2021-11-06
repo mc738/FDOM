@@ -13,6 +13,7 @@ open FDOM.Rendering
 open FDOM.Storage
 open FLite.Core
 open FDOM.Storage.Blobs
+open Fluff.Core
 
 
 // TODO make tests.
@@ -65,11 +66,13 @@ let blobStoreTest =
 let documentStoreTest =
     let blocks =
         Parser
-            .ParseLines(File.ReadAllLines("C:\\Users\\44748\\Projects\FDOM\\FDOM.IntegrationTests\\test_article_1.md")
-                        |> List.ofArray)
+            .ParseLines(
+                File.ReadAllLines("C:\\Users\\44748\\Projects\FDOM\\FDOM.IntegrationTests\\test_article_1.md")
+                |> List.ofArray
+            )
             .CreateBlockContent()
 
-    let doc : FDOM.Core.Common.DOM.Document =
+    let doc: FDOM.Core.Common.DOM.Document =
         { Style = FDOM.Core.Common.DOM.Style.Default
           Name = "Test parsed document"
           Title = None
@@ -111,18 +114,88 @@ let documentStoreTest =
 
     //let ds = DocumentStore(qh)
     //
-    
+
     //ds.Initialize()
     ()
 
 let pdfTest _ =
     let blocks =
         Parser
-            .ParseLines(File.ReadAllLines("C:\\Users\\44748\\Projects\FDOM\\FDOM.IntegrationTests\\test_article_1.md")
-                        |> List.ofArray)
+            .ParseLines(
+                File.ReadAllLines("C:\\Users\\44748\\Projects\FDOM\\FDOM.IntegrationTests\\test_article_1.md")
+                |> List.ofArray
+            )
             .CreateBlockContent()
 
-    let doc : FDOM.Core.Common.DOM.Document =
+    let doc: FDOM.Core.Common.DOM.Document =
+        { Style = FDOM.Core.Common.DOM.Style.Default
+          Name = "Test parsed document"
+          Title = None
+          Sections =
+              [ { Style = FDOM.Core.Common.DOM.Style.Default
+                  Title = None
+                  Name = "Section 1"
+                  Content = blocks } ]
+          Resources =
+              [ { Name = "main_css"
+                  Path = "/home/max/Data/FDOM_Tests/css/style.css"
+                  VirtualPath = "css/style.css"
+                  Type = "stylesheet" }
+                { Name = "style_css"
+                  Path = "/home/max/Data/FDOM_Tests/css/main.css"
+                  VirtualPath = "css/main.css"
+                  Type = "stylesheet" }
+                { Name = "index_js"
+                  Path = "/home/max/Data/FDOM_Tests/js/index.js"
+                  VirtualPath = "js/index.js"
+                  Type = "script" }
+                { Name = "main_js"
+                  Path = "/home/max/Data/FDOM_Tests/js/main.js"
+                  VirtualPath = "js/main.js"
+                  Type = "script" }
+                { Name = "original"
+                  Path = "/home/max/Projects/FDOM/FDOM.IntegrationTests/test_article_1.md"
+                  VirtualPath = "articles/test_article_1.md"
+                  Type = "artifact" }
+                { Name = "image_1"
+                  Path = "/home/max/Data/FDOM_Tests/images/live_server.png"
+                  VirtualPath = "img/image_1.png"
+                  Type = "image" }
+                { Name = "image_2"
+                  Path = "/home/max/Data/FDOM_Tests/images/R2CSeU4JMFB4QX2uiIDODJkqTgwXW67fhYDeLYpgvfI.webp"
+                  VirtualPath = "img/image_2.webp"
+                  Type = "image" } ] }
+
+    Pdf.render
+        $"C:\\ProjectData\\TestPDFs\\{DateTime.Now.ToFileTime()}.pdf"
+        "C:\\Users\\44748\\Projects\\PDFBuilder\\styles.json"
+        doc
+
+let mustasheTest _ =
+    
+    let template = File.ReadAllText("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\page-template.mustache")
+
+    let values =
+        ({ Values =
+               [ "title", Mustache.Value.Scalar "Examples"
+                 "version", Mustache.Value.Scalar "v.0.1.0"
+                 "thanks",
+                 Mustache.Value.Scalar
+                     """<p>Photo by <a href="https://unsplash.com/@emmafranceslogan?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Emma Frances Logan</a> on <a href="https://unsplash.com/s/photos/waiter?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></p>"""
+                 "now", Mustache.Value.Scalar (DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss"))
+               ]
+               |> Map.ofList
+           Partials = Map.empty }: Mustache.Data)
+    
+    let blocks =
+        Parser
+            .ParseLines(
+                File.ReadAllLines("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\examples.md")
+                |> List.ofArray
+            )
+            .CreateBlockContent()
+
+    let doc: FDOM.Core.Common.DOM.Document =
         { Style = FDOM.Core.Common.DOM.Style.Default
           Name = "Test parsed document"
           Title = None
@@ -161,11 +234,25 @@ let pdfTest _ =
                   VirtualPath = "img/image_2.webp"
                   Type = "image" } ] }
         
-    Pdf.render $"C:\\ProjectData\\TestPDFs\\{DateTime.Now.ToFileTime()}.pdf" "C:\\Users\\44748\\Projects\\PDFBuilder\\styles.json" doc
+    let result = Html.renderFromTemplate template values [] [] doc
+    
+    File.WriteAllText("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\examples.html", result)
+        
+
+(*
+waiter values:
+title - page title
+version - page version
+content - page content
+thanks - path thanks
+now - datetime now
+*)
+
 
 [<EntryPoint>]
 let main argv =
-    
+
+    mustasheTest ()
     pdfTest ()
     // auditTest
     // documentStoreTest
@@ -191,11 +278,13 @@ let main argv =
 
     let blocks =
         Parser
-            .ParseLines(File.ReadAllLines("/home/max/Projects/FDOM/FDOM.IntegrationTests/test_article_1.md")
-                        |> List.ofArray)
+            .ParseLines(
+                File.ReadAllLines("/home/max/Projects/FDOM/FDOM.IntegrationTests/test_article_1.md")
+                |> List.ofArray
+            )
             .CreateBlockContent()
 
-    let doc : FDOM.Core.Common.DOM.Document =
+    let doc: FDOM.Core.Common.DOM.Document =
         { Style = FDOM.Core.Common.DOM.Style.Default
           Name = "Test parsed document"
           Title = None
@@ -241,35 +330,39 @@ let main argv =
 
     //printfn "Test: %A" t
 
-    let stylesheets = doc.Resources
-                      |> List.filter (fun r -> r.Type = "stylesheet")
-                      |> List.map (fun r -> $"{doc.SnakeCaseName}/{r.VirtualPath}")
-                      
-    let scripts = doc.Resources
-                  |> List.filter (fun r -> r.Type = "script")
-                  |> List.map (fun r -> $"{doc.SnakeCaseName}/{r.VirtualPath}")
-        
-    let layout : Html.Layout =
+    let stylesheets =
+        doc.Resources
+        |> List.filter (fun r -> r.Type = "stylesheet")
+        |> List.map (fun r -> $"{doc.SnakeCaseName}/{r.VirtualPath}")
+
+    let scripts =
+        doc.Resources
+        |> List.filter (fun r -> r.Type = "script")
+        |> List.map (fun r -> $"{doc.SnakeCaseName}/{r.VirtualPath}")
+
+    let layout: Html.Layout =
         { Head = "<section id=\"sidebar\"><small>Main</small></section><main><small>Main</small>"
           Foot = "</main>" }
 
     let html =
         Html.render layout stylesheets scripts doc
 
-    let renderedDocPath = $"/home/max/Data/FDOM_Tests/test_{DateTime.Now:yyyyMMddHHmmss}.html"
-    
+    let renderedDocPath =
+        $"/home/max/Data/FDOM_Tests/test_{DateTime.Now:yyyyMMddHHmmss}.html"
+
     File.WriteAllText(renderedDocPath, html)
 
     //let qh = QueryHandler.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
 
-    let ds = DocumentStore.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
+    let ds =
+        DocumentStore.Create($"/home/max/Data/FDOM_Tests/blob_store/{DateTime.Now:yyyyMMddHHmmss}.db")
 
-    let rendererDocs: DOM.RenderedDocument list = [
-        { Path = renderedDocPath; VirtualPath = "index.html" }
-    ]
-    
+    let rendererDocs: DOM.RenderedDocument list =
+        [ { Path = renderedDocPath
+            VirtualPath = "index.html" } ]
+
     let docRef = ds.AddDocument(doc, false, rendererDocs)
-    
+
     //ds.AddDocumentVersion(docRef, doc, 1, 1, 0, "test", [ renderedDocPath ]) |> ignore
-    
+
     0 // return an integer exit code
