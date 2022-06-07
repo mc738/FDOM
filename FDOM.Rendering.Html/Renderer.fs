@@ -1,6 +1,7 @@
 ﻿[<RequireQualifiedAccess>]
 module FDOM.Rendering.Html
 
+open System.Text.Encodings.Web
 open FDOM.Core.Common
 open Fluff.Core
 
@@ -35,7 +36,8 @@ module private Utils =
 
 [<AutoOpen>]
 module private Inline =
-    let renderText (text: DOM.InlineText) = text.Content
+    let renderText (text: DOM.InlineText) =
+        text.Content |> HtmlEncoder.Default.Encode
 
     let renderSpan (span: DOM.InlineSpan) =
         sprintf "<span%s>%s</span>" (renderStyle span.Style) span.Content
@@ -50,6 +52,20 @@ module private Inline =
     let renderInlineItems (items: DOM.InlineContent list) =
         (items |> List.map renderInlineContent) +> ""
 
+
+    let renderInlineItemText (item: DOM.InlineContent) =
+        match item with
+        | DOM.Text t -> t.Content
+        | DOM.Span s -> s.Content
+
+
+    let slugify (value: string) = value.ToLower().Replace(" ", "-")
+
+    let renderInlineItemsText (items: DOM.InlineContent list) =
+        items
+        |> List.map renderInlineItemText
+        |> String.concat ""
+
 [<AutoOpen>]
 module private Blocks =
     let renderHeader (header: DOM.HeaderBlock) =
@@ -62,11 +78,17 @@ module private Blocks =
             | DOM.HeaderLevel.H5 -> "h5"
             | DOM.HeaderLevel.H6 -> "h6"
 
-        sprintf "<%s%s>%s</%s>" tag (renderStyle header.Style) (renderInlineItems header.Content) tag
+        match header.Indexed with
+        | true ->
+            $"<{tag} id=\"{renderInlineItemsText header.Content |> slugify}\"{renderStyle header.Style}>{renderInlineItems header.Content}</{tag}>"
+        | false -> sprintf "<%s%s>%s</%s>" tag (renderStyle header.Style) (renderInlineItems header.Content) tag
 
     let renderParagraph (paragraph: DOM.ParagraphBlock) =
         sprintf "<p%s>%s</p>" (renderStyle paragraph.Style) (renderInlineItems paragraph.Content)
 
+    let renderCode (code: DOM.CodeBlock) =
+        $"<pre{renderStyle code.Style}><code>{renderInlineItems code.Content}</code></pre>"
+    
     let renderListItem (item: DOM.ListItem) =
 
         sprintf "<li%s>%s</li>" (renderStyle item.Style) (renderInlineItems item.Content)
@@ -89,6 +111,7 @@ module private Blocks =
         match block with
         | DOM.BlockContent.Header h -> renderHeader h
         | DOM.BlockContent.Paragraph p -> renderParagraph p
+        | DOM.BlockContent.Code c -> renderCode c
         | DOM.BlockContent.List l -> renderList l
         | DOM.BlockContent.Image i -> renderImage
 
@@ -119,13 +142,14 @@ module private Document =
           layout.Foot ]
         +> ""
 
-
-
     let renderStylesheetReference reference =
         sprintf """<link href="%s" rel="stylesheet">""" reference
 
     let renderScriptReference reference =
         sprintf """<script src="%s"></script>""" reference
+
+let getIndexes (document: DOM.Document) =
+        document.GetIndexes(renderInlineItemsText)
 
 let render (layout: Layout) (stylesheets: string list) (scriptSources: string list) (document: DOM.Document) =
 
@@ -142,7 +166,13 @@ let render (layout: Layout) (stylesheets: string list) (scriptSources: string li
       renderFoot scripts ]
     +> ""
 
-let renderFromTemplate (template: string) (values: Mustache.Data) (stylesheets: string list) (scriptSources: string list) (document: DOM.Document) =
+let renderFromParsedTemplate
+    (template: Mustache.Token list)
+    (values: Mustache.Data)
+    (stylesheets: string list)
+    (scriptSources: string list)
+    (document: DOM.Document)
+    =
     let links =
         (stylesheets |> List.map renderStylesheetReference)
         +> ""
@@ -150,13 +180,46 @@ let renderFromTemplate (template: string) (values: Mustache.Data) (stylesheets: 
     let scripts =
         (scriptSources |> List.map renderScriptReference)
         +> ""
-        
+
     let renderArticle content =
-            [ "<article>"
-              (content |> List.map renderSection) +> ""
-              "</article>" ]
-            +> ""
-           
-    let data = {values with Values = values.Values.Add("content", renderArticle document.Sections |> Mustache.Value.Scalar) }
-    Mustache.replace data  true (Mustache.parse template)
-    
+        [ "<article>"
+          (content |> List.map renderSection) +> ""
+          "</article>" ]
+        +> ""
+
+    (*
+    let indexes =
+        Document.getIndexes document
+        |> List.map
+            (fun i ->
+                [ "index_slug", i |> slugify |> Mustache.Value.Scalar
+                  "index_title", i |> Mustache.Value.Scalar ]
+                |> Map.ofList
+                |> Mustache.Value.Object)
+        |> Mustache.Value.Array
+    *)
+
+
+    let data =
+        { values with
+              Values =
+                  values
+                      .Values
+                      .Add(
+                          "content",
+                          renderArticle document.Sections
+                          |> Mustache.Value.Scalar
+                      ) }
+
+    Mustache.replace data true template
+
+let renderFromTemplate
+    (template: string)
+    (values: Mustache.Data)
+    (stylesheets: string list)
+    (scriptSources: string list)
+    (document: DOM.Document)
+    =
+    renderFromParsedTemplate (Mustache.parse template) values stylesheets scriptSources document
+
+let renderFromBlocks (blocks: DOM.BlockContent list) = renderBlocks blocks

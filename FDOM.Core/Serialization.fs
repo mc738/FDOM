@@ -425,7 +425,37 @@ module Extensions =
                     |> ignore)
                 "content"
                 writer
+                
+    type DOM.CodeBlock with
 
+        static member FromJson(element: JsonElement) =
+            match tryGetContent element, tryGetStyle element with
+            | Some ce, Some se ->
+                let (content, errors) =
+                    ce
+                    |> List.map DOM.InlineContent.FromJson
+                    |> Utils.collectResults
+
+                Ok(
+                    { Style = DOM.Style.FromJsonWithDefault se
+                      Content = content }: DOM.CodeBlock
+                )
+            | None, _ -> Error "Missing content element."
+            | _, None -> Error "Missing style element."
+
+        member code.WriteToJson(writer: Utf8JsonWriter) =
+            writer.WriteString("type", "code")
+            writePropertyObject code.Style.WriteToJson "style" writer
+
+            writeArray
+                (fun w ->
+                    code.Content
+                    |> List.map (fun c -> writeObject c.WriteToJson w)
+                    |> ignore)
+                "content"
+                writer
+                            
+                
     type DOM.ListItem with
         static member FromJson(element: JsonElement) =
             match tryGetContent element, tryGetStyle element with
@@ -509,6 +539,10 @@ module Extensions =
                 match DOM.ParagraphBlock.FromJson element with
                 | Ok p -> Ok <| DOM.BlockContent.Paragraph p
                 | Error e -> Error $"Could not create paragraph block. Error: \"{e}\""
+            | Some t when t = "code" ->
+                match DOM.CodeBlock.FromJson element with
+                | Ok c -> Ok <| DOM.Code c
+                | Error e -> Error $"Could not create code block. Error: \"{e}\""
             | Some t when t = "l" ->
                 match DOM.ListBlock.FromJson element with
                 | Ok l -> Ok <| DOM.BlockContent.List l
@@ -521,6 +555,7 @@ module Extensions =
             match content with
             | DOM.BlockContent.Header h -> h.WriteToJson writer
             | DOM.BlockContent.Paragraph p -> p.WriteToJson writer
+            | DOM.BlockContent.Code c -> c.WriteToJson writer
             | DOM.BlockContent.List l -> l.WriteToJson writer
             | DOM.BlockContent.Image i -> ()
 

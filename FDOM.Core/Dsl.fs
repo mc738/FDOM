@@ -26,6 +26,8 @@ module General =
 
     let p style content = DOM.createParagraph style content
 
+    let code style content = DOM.createCode style content
+    
     let ol style items = DOM.createOrderedList style items
 
     let ul style items = DOM.createUnorderedList style items
@@ -59,6 +61,8 @@ module Article =
     let p content = General.p (Style.references []) content
 
     let code content = General.p (Style.references [ "code" ]) content
+    
+    let codeBlock lang content = General.code (Style.references [ $"language-{lang}" ]) content
     
     let quote content = General.p (Style.references [ "quote" ]) content
     

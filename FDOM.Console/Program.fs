@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Security.Cryptography
 open System.Text.Json
+open System.Text.Json.Serialization
 open System.Text.RegularExpressions
 open FDOM.Core.Common
 open FDOM.Core.Parsing
@@ -172,8 +173,9 @@ let pdfTest _ =
         doc
 
 let mustasheTest _ =
-    
-    let template = File.ReadAllText("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\page-template.mustache")
+
+    let template =
+        File.ReadAllText("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\page-template.mustache")
 
     let values =
         ({ Values =
@@ -182,11 +184,10 @@ let mustasheTest _ =
                  "thanks",
                  Mustache.Value.Scalar
                      """<p>Photo by <a href="https://unsplash.com/@emmafranceslogan?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Emma Frances Logan</a> on <a href="https://unsplash.com/s/photos/waiter?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a></p>"""
-                 "now", Mustache.Value.Scalar (DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss"))
-               ]
+                 "now", Mustache.Value.Scalar(DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss")) ]
                |> Map.ofList
            Partials = Map.empty }: Mustache.Data)
-    
+
     let blocks =
         Parser
             .ParseLines(
@@ -233,12 +234,87 @@ let mustasheTest _ =
                   Path = "/home/max/Data/FDOM_Tests/images/R2CSeU4JMFB4QX2uiIDODJkqTgwXW67fhYDeLYpgvfI.webp"
                   VirtualPath = "img/image_2.webp"
                   Type = "image" } ] }
-        
-    let result = Html.renderFromTemplate template values [] [] doc
-    
-    File.WriteAllText("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\examples.html", result)
-        
 
+    let result =
+        Html.renderFromTemplate template values [] [] doc
+
+    File.WriteAllText("C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\examples.html", result)
+
+type DocumentAction =
+    { DocumentPath: string
+      Name: string
+      NameSlug: string
+      Thanks: string
+      OutputPath: string }
+
+let buildDocsFromTemplate (docs: DocumentAction list) (templatePath: string) =
+    docs
+    |> List.map
+        (fun d ->
+            let template = File.ReadAllText(templatePath)
+
+            let values =
+                ({ Values =
+                       [ "title", Mustache.Value.Scalar d.Name
+                         "titleSlug", Mustache.Value.Scalar d.NameSlug
+                         "version", Mustache.Value.Scalar "v.0.1.0"
+                         "thanks", Mustache.Value.Scalar d.Thanks
+                         "now", Mustache.Value.Scalar(DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss")) ]
+                       |> Map.ofList
+                   Partials = Map.empty }: Mustache.Data)
+
+            let blocks =
+                Parser
+                    .ParseLines(File.ReadAllLines(d.DocumentPath) |> List.ofArray)
+                    .CreateBlockContent()
+
+            let doc: FDOM.Core.Common.DOM.Document =
+                { Style = FDOM.Core.Common.DOM.Style.Default
+                  Name = "Test parsed document"
+                  Title = None
+                  Sections =
+                      [ { Style = FDOM.Core.Common.DOM.Style.Default
+                          Title = None
+                          Name = "Section 1"
+                          Content = blocks } ]
+                  Resources =
+                      [ { Name = "main_css"
+                          Path = "/home/max/Data/FDOM_Tests/css/style.css"
+                          VirtualPath = "css/style.css"
+                          Type = "stylesheet" }
+                        { Name = "style_css"
+                          Path = "/home/max/Data/FDOM_Tests/css/main.css"
+                          VirtualPath = "css/main.css"
+                          Type = "stylesheet" }
+                        { Name = "index_js"
+                          Path = "/home/max/Data/FDOM_Tests/js/index.js"
+                          VirtualPath = "js/index.js"
+                          Type = "script" }
+                        { Name = "main_js"
+                          Path = "/home/max/Data/FDOM_Tests/js/main.js"
+                          VirtualPath = "js/main.js"
+                          Type = "script" }
+                        { Name = "original"
+                          Path = "/home/max/Projects/FDOM/FDOM.IntegrationTests/test_article_1.md"
+                          VirtualPath = "articles/test_article_1.md"
+                          Type = "artifact" }
+                        { Name = "image_1"
+                          Path = "/home/max/Data/FDOM_Tests/images/live_server.png"
+                          VirtualPath = "img/image_1.png"
+                          Type = "image" }
+                        { Name = "image_2"
+                          Path = "/home/max/Data/FDOM_Tests/images/R2CSeU4JMFB4QX2uiIDODJkqTgwXW67fhYDeLYpgvfI.webp"
+                          VirtualPath = "img/image_2.webp"
+                          Type = "image" } ] }
+
+            let result =
+                Html.renderFromTemplate template values [] [] doc
+
+            File.WriteAllText(d.OutputPath, result))
+
+// "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\page-template.mustache"
+
+// "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\examples.html"
 (*
 waiter values:
 title - page title
@@ -249,10 +325,99 @@ now - datetime now
 *)
 
 
+module HtmlPipeline =
+        
+    type BuildAction =
+        { [<JsonPropertyName("documentPath")>]
+          DocumentPath: string
+          [<JsonPropertyName("name")>]
+          Name: string
+          [<JsonPropertyName("nameSlug")>]
+          NameSlug: string
+          [<JsonPropertyName("thanks")>]
+          Thanks: string
+          [<JsonPropertyName("outputPath")>]
+          OutputPath: string }
+
+    type DocumentGroup =
+        { [<JsonPropertyName("templatePath")>]
+          TemplatePath: string
+          [<JsonPropertyName("buildActions")>]
+          BuildActions: BuildAction list }
+        
+    type PipelineConfig = {
+        [<JsonPropertyName("actions")>]
+        Actions: DocumentGroup seq
+    }
+    
+    let loadConfig (path: string) =
+        try
+            File.ReadAllText path |> JsonSerializer.Deserialize<PipelineConfig> |> Ok
+        with
+        | exn -> Error exn.Message
+        
+    let run (config: PipelineConfig) =
+        config.Actions
+        |> List.ofSeq
+        |> List.map (fun dg ->
+            dg.BuildActions
+            |> List.map (fun ba ->
+                ({
+                    DocumentPath = ba.DocumentPath
+                    Name = ba.Name
+                    NameSlug = ba.NameSlug
+                    Thanks = ba.Thanks
+                    OutputPath = ba.OutputPath
+                }: DocumentAction))
+            |> buildDocsFromTemplate
+            <| dg.TemplatePath)
+
+
+
 [<EntryPoint>]
 let main argv =
 
-    mustasheTest ()
+
+
+    "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\page-template.mustache"
+    |> buildDocsFromTemplate [ { DocumentPath =
+                                     "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\documentation\\examples.md"
+                                 Name = "Examples"
+                                 NameSlug = "examples"
+                                 Thanks =
+                                     """Photo by <a href="https://unsplash.com/@johnschno?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">John Schnobrich</a> on <a href="https://unsplash.com/s/photos/work-together?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>"""
+                                 OutputPath = "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\examples.html" }
+                               { DocumentPath =
+                                     "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\documentation\\commands.md"
+                                 Name = "Commands"
+                                 NameSlug = "commands"
+                                 Thanks =
+                                     """Photo by <a href="https://unsplash.com/@cdr6934?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Chris Ried</a> on <a href="https://unsplash.com/s/photos/code?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>"""
+                                 OutputPath = "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\commands.html" }
+                               { DocumentPath =
+                                     "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\documentation\\jobs.md"
+                                 Name = "Jobs"
+                                 NameSlug = "jobs"
+                                 Thanks =
+                                     """Photo by <a href="https://unsplash.com/@jramos10?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Josue Isai Ramos Figueroa</a> on <a href="https://unsplash.com/s/photos/construction?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>"""
+                                 OutputPath = "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\jobs.html" }
+                               { DocumentPath =
+                                     "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\documentation\\overview.md"
+                                 Name = "Overview"
+                                 NameSlug = "overview"
+                                 Thanks =
+                                     """Photo by <a href="https://unsplash.com/@carolineattwood?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Caroline Attwood</a> on <a href="https://unsplash.com/s/photos/waiter?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>"""
+                                 OutputPath = "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\overview.html" }
+                               { DocumentPath =
+                                     "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\documentation\\routes.md"
+                                 Name = "Routes"
+                                 NameSlug = "routes"
+                                 Thanks =
+                                     """Photo by <a href="https://unsplash.com/@ed259?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Ed 259</a> on <a href="https://unsplash.com/s/photos/roads?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>"""
+                                 OutputPath = "C:\\Users\\44748\\Projects\\__prototypes\\waiter_website\\routes.html" } ]
+    |> ignore
+
+    //mustasheTest ()
     pdfTest ()
     // auditTest
     // documentStoreTest

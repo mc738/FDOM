@@ -4,6 +4,7 @@ open System
 open System.ComponentModel
 open System.Runtime.Serialization
 open System.Text
+open System.Text.Encodings.Web
 open FDOM.Core.Common
 open FDOM.Core.Common
 open FDOM.Core.Common
@@ -48,7 +49,7 @@ module BlockParser =
         | Header of string
         | OrderListItem of string
         | UnorderedListItem of string
-        | CodeBlock of string
+        | CodeBlock of string option * string
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -120,11 +121,15 @@ module BlockParser =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.CodeBlockDelimited -> Error()
-        | _ ->
+        | Some l ->
+            // TODO tidy up.
+            let lang = l.Text.Replace("`", "").Trim()
+            
             let (lines, next) =
                 input.TryGetUntilTypeOrEnd(curr + 1, LineType.CodeBlockDelimited)
-
-            Ok(BlockToken.CodeBlock(formatter lines), next)
+            
+            // Special formatter to preserve line breaks. 
+            Ok(BlockToken.CodeBlock(Some lang, lines |> List.map (fun l -> l.Text) |> String.concat Environment.NewLine), next)
 
     let tryParseOrderedListItem (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
@@ -358,7 +363,7 @@ module Processing =
     let createHeaderContent (value : string) =
         let (hType, content) = getHeaderType value
         match hType with
-        | 1 -> h1 false Style.none (InlineParser.parseInlineContent content) 
+        | 1 -> h1 true Style.none (InlineParser.parseInlineContent content) 
         | 2 -> h2 false Style.none (InlineParser.parseInlineContent content) 
         | 3 -> h3 false Style.none (InlineParser.parseInlineContent content) 
         | 4 -> h4 false Style.none (InlineParser.parseInlineContent content) 
@@ -369,8 +374,9 @@ module Processing =
     let createParagraphContent (value : string) =
         p Style.none (InlineParser.parseInlineContent value)
         
-    let createCodeBlock (value : string) =
-        p (Style.references [ "codeblock" ]) (InlineParser.parseInlineContent value)
+    // TODO update to get language
+    let createCodeBlock (lang: string option) (value : string) =
+        code (Style.references [ lang |> Option.map(fun l -> $"language-{l}") |> Option.defaultValue "" ]) (InlineParser.parseInlineContent value)
  
     let createListItem (value : string) =
         li Style.none (InlineParser.parseInlineContent value)
@@ -408,8 +414,8 @@ module Processing =
                         (createHeaderContent h, remainingBlocks.Tail)
                     | BlockParser.BlockToken.Paragraph p ->
                         (createParagraphContent p, remainingBlocks.Tail)
-                    | BlockParser.BlockToken.CodeBlock c ->
-                        (createCodeBlock c, remainingBlocks.Tail)
+                    | BlockParser.BlockToken.CodeBlock (lang, c) ->
+                        (createCodeBlock lang c, remainingBlocks.Tail)
                     | BlockParser.BlockToken.OrderListItem _ ->
                         let (collected, remaining) = collectOrderedListItems [] remainingBlocks
                         (createOrderedListItems collected, remaining)

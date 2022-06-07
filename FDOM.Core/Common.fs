@@ -33,6 +33,10 @@ module DOM =
         { Style: Style
           Content: InlineContent list }
 
+    and CodeBlock =
+        { Style: Style
+          Content: InlineContent list }
+    
     /// A list block
     /// Can represent an ordered or unordered list.
     and ListBlock =
@@ -53,6 +57,7 @@ module DOM =
     and BlockContent =
         | Header of HeaderBlock
         | Paragraph of ParagraphBlock
+        | Code of CodeBlock
         | List of ListBlock
         | Image of ImageBlock
 
@@ -69,14 +74,25 @@ module DOM =
           Title: HeaderBlock option
           Name: string
           Content: BlockContent list }
+        
+        /// Get indexed headers from a section and pass the into a handler function to generate indexes.
+        member section.GetIndexes<'I>(indexHandler: InlineContent list -> 'I) =
+            section.Content
+            |> List.choose (fun c ->
+                match c with
+                | Header h ->
+                    match h.Indexed with
+                    | true ->
+                        Some <| indexHandler h.Content
+                    | false -> None
+                | _ -> None)
+        
+    and Resource =
+        { Name: string
+          Path: string
+          VirtualPath: string
+          Type: string }
 
-    and Resource = {
-        Name: string
-        Path: string
-        VirtualPath: string
-        Type: string
-    }
-    
     and Document =
         { Style: Style
           Title: HeaderBlock option
@@ -84,13 +100,15 @@ module DOM =
           Sections: Section list
           Resources: Resource list }
 
-        with member doc.SnakeCaseName = doc.Name.ToLower().Replace(' ', '_')
-        
-    type RenderedDocument = {
-        Path: string
-        VirtualPath: string
-    }    
-        
+        member doc.SnakeCaseName = doc.Name.ToLower().Replace(' ', '_')
+
+        /// Get indexed headers from a document and pass the into a handler function to generate indexes.         
+        member doc.GetIndexes(indexHandler: InlineContent list -> string) =
+            doc.Sections |> List.collect (fun s -> s.GetIndexes indexHandler)
+                
+
+    type RenderedDocument = { Path: string; VirtualPath: string }
+
     /// A helper to create a header block.
     /// The function is set up to allow partial application.
     /// For example:
@@ -123,7 +141,10 @@ module DOM =
     let createParagraph style content =
         BlockContent.Paragraph { Style = style; Content = content }
 
-    let createListItem style content: ListItem = { Style = style; Content = content }
+    let createCode style content =
+        BlockContent.Code { Style = style; Content = content }
+    
+    let createListItem style content : ListItem = { Style = style; Content = content }
 
     let createList ordered style items =
         BlockContent.List
@@ -140,7 +161,8 @@ module DOM =
 
     let createText text = InlineContent.Text { Content = text }
 
-    let createSpan style text = InlineContent.Span { Style = style; Content = text }
+    let createSpan style text =
+        InlineContent.Span { Style = style; Content = text }
 
     let createSection style title name content =
         { Style = style
@@ -156,7 +178,7 @@ module DOM =
           Resources = resources }
 
 module Formatting =
-    
+
     /// A regex replace formatter.
     /// This will take a pattern and replace it with a replacement string.
     type RegexReplaceFormatter =
@@ -164,9 +186,9 @@ module Formatting =
           Replacement: string }
 
         static member CreateFormatters(data: (string * string) list) =
-              data
-              |> List.map (fun (p, r) -> Formatter.RegexReplace { Pattern = p; Replacement = r })
-        
+            data
+            |> List.map (fun (p, r) -> Formatter.RegexReplace { Pattern = p; Replacement = r })
+
         member formatter.Run(input) =
             Regex.Replace(input, formatter.Pattern, formatter.Replacement)
 
@@ -177,48 +199,48 @@ module Formatting =
           Replacement: string }
 
         static member CreateFormatters(data: (string * string) list) =
-              data
-              |> List.map (fun (p, r) -> Formatter.StringReplace { Pattern = p; Replacement = r })
+            data
+            |> List.map (fun (p, r) -> Formatter.StringReplace { Pattern = p; Replacement = r })
 
-        member formatter.Run(input: string) = input.Replace(formatter.Pattern, formatter.Replacement)
-    
+        member formatter.Run(input: string) =
+            input.Replace(formatter.Pattern, formatter.Replacement)
+
     /// A formatter that can be used to transform text.
     and Formatter =
         | RegexReplace of RegexReplaceFormatter
         | StringReplace of StringReplaceFormatter
         | Trim
-        
+
     let private formatterHandler formatter input =
         match formatter with
         | RegexReplace f -> f.Run(input)
         | StringReplace f -> f.Run(input)
         | Trim -> input.Trim()
-        
+
     type Formatters =
         { Items: Formatter list }
-        static member Create(formatters) =
-            { Items = formatters }
+        static member Create(formatters) = { Items = formatters }
 
-        
+
         static member DefaultPreprocessors() =
             let regexMacros =
-                RegexReplaceFormatter.CreateFormatters([
-                    "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy")
-                ])
-        
+                RegexReplaceFormatter.CreateFormatters([ "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy") ])
+
             Formatters.Create(List.concat [ regexMacros; [ Trim ] ])
-            
+
         static member DefaultFormatters() =
-            let regexReplacements = 
-                RegexReplaceFormatter.CreateFormatters([
-                    "\,(?=[A-Za-z0-9])",", " // Add space after , if missing.
-                    "\.(?=[A-Za-z0-9])",". " // Add space after . if missing.
-                    "\!(?=[A-Za-z0-9])","! " // Add space after ! if missing.
-                    "\?(?=[A-Za-z0-9])","? " // Add space after ? if missing.
-                    "^(\* )", "" // Strip leading `* `
-                    "^([0-9]\. )|^([0-9][0-9]\. )", "" // Strip leading `1. ` or `99. `
-                ])
-        
+            let regexReplacements =
+                RegexReplaceFormatter.CreateFormatters(
+                    [ "\,(?=[A-Za-z0-9])", ", " // Add space after , if missing.
+                      "\.(?=[A-Za-z0-9])", ". " // Add space after . if missing.
+                      "\!(?=[A-Za-z0-9])", "! " // Add space after ! if missing.
+                      "\?(?=[A-Za-z0-9])", "? " // Add space after ? if missing.
+                      "^(\* )", "" // Strip leading `* `
+                      "^([0-9]\. )|^([0-9][0-9]\. )", "" ] // Strip leading `1. ` or `99. `
+                )
+
             Formatters.Create(List.concat [ regexReplacements ])
-            
-        member formatters.Run(input) = formatters.Items |> List.fold (fun state f -> formatterHandler f state ) input
+
+        member formatters.Run(input) =
+            formatters.Items
+            |> List.fold (fun state f -> formatterHandler f state) input

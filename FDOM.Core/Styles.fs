@@ -10,7 +10,7 @@ type NamedStyle =
     
     member namedStyle.GetSelector() =
         match namedStyle with
-        | CodeBlock -> "codeblock"
+        | CodeBlock -> "code-block"
         | InlineCodeBlock -> "code"
         | StandOut -> "stand-out"
         | Example -> "example"
