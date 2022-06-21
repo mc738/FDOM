@@ -69,8 +69,11 @@ module DOM =
 
     and InlineSpan = { Content: string; Style: Style }
 
-    and InlineLink = { Content: string; Url: string; Style: Style }
-    
+    and InlineLink =
+        { Content: string
+          Url: string
+          Style: Style }
+
     and InlineContent =
         | Text of InlineText
         | Span of InlineSpan
@@ -177,10 +180,13 @@ module DOM =
     let createSpan style text =
         InlineContent.Span { Style = style; Content = text }
 
-    
+
     let createLink style text url =
-        InlineContent.Link { Style = style; Content = text; Url = url }
-    
+        InlineContent.Link
+            { Style = style
+              Content = text
+              Url = url }
+
     let createSection style title name content =
         { Style = style
           Title = title
@@ -227,12 +233,19 @@ module Formatting =
         | RegexReplace of RegexReplaceFormatter
         | StringReplace of StringReplaceFormatter
         | Trim
+        | AddSpaceToLineEnd
 
     let private formatterHandler formatter input =
         match formatter with
         | RegexReplace f -> f.Run(input)
         | StringReplace f -> f.Run(input)
         | Trim -> input.Trim()
+        | AddSpaceToLineEnd ->
+            if String.IsNullOrEmpty input |> not
+               && input.[input.Length - 1] <> ' ' then
+                $"{input} "
+            else
+                input
 
     type Formatters =
         { Items: Formatter list }
@@ -243,20 +256,25 @@ module Formatting =
             let regexMacros =
                 RegexReplaceFormatter.CreateFormatters([ "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy") ])
 
-            Formatters.Create(List.concat [ regexMacros; [ Trim ] ])
+            Formatters.Create(
+                List.concat [ regexMacros
+                              [ Trim; AddSpaceToLineEnd ] ]
+            )
 
         static member DefaultFormatters() =
+            // Most of these might not been needed anymore with `AddSpaceToLineEnd`.
             let regexReplacements =
                 RegexReplaceFormatter.CreateFormatters(
                     [ "\,(?=[A-Za-z0-9])", ", " // Add space after , if missing.
-                      "\.(?=[A-Za-z0-9])", ". " // Add space after . if missing.
+                      //"\.(?=[A-Za-z0-9])", ". " // Add space after . if missing.
                       "\!(?=[A-Za-z0-9])", "! " // Add space after ! if missing.
                       "\?(?=[A-Za-z0-9])", "? " // Add space after ? if missing.
                       "^(\* )", "" // Strip leading `* `
                       "^([0-9]\. )|^([0-9][0-9]\. )", "" ] // Strip leading `1. ` or `99. `
                 )
 
-            Formatters.Create(List.concat [ regexReplacements ])
+            // One final trim to remove any extra spaces. Could be more efficient but it should work.
+            Formatters.Create(List.concat [ regexReplacements; [ Trim ] ])
 
         member formatters.Run(input) =
             formatters.Items

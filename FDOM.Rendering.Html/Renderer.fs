@@ -42,12 +42,16 @@ module private Inline =
     let renderSpan (span: DOM.InlineSpan) =
         sprintf "<span%s>%s</span>" (renderStyle span.Style) span.Content
 
+    let renderLink (link: DOM.InlineLink) =
+        $"""<a href="{link.Url}">{link.Content}</a>"""
+    
     //let renderSpans (spans: DOM.InlineSpan list) = (spans |> List.map renderSpan) +> ""
 
     let renderInlineContent (content: DOM.InlineContent) =
         match content with
         | DOM.Text t -> renderText t
         | DOM.Span s -> renderSpan s
+        | DOM.Link l -> renderLink l
 
     let renderInlineItems (items: DOM.InlineContent list) =
         (items |> List.map renderInlineContent) +> ""
@@ -57,6 +61,7 @@ module private Inline =
         match item with
         | DOM.Text t -> t.Content
         | DOM.Span s -> s.Content
+        | DOM.Link l -> l.Content
 
 
     let slugify (value: string) = value.ToLower().Replace(" ", "-")
