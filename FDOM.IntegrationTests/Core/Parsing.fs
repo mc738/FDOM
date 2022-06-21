@@ -27,7 +27,7 @@ type BlockParsing () =
                 BlockToken.OrderListItem "Ut sagittis augue sapien. Aliquam at justo facilisis, varius diam vel, fringilla ligula."
                 BlockToken.OrderListItem "Pellentesque porttitor facilisis eros nec rhoncus."
                 BlockToken.Empty
-                BlockToken.CodeBlock "let message = \"Hello, World!\""
+                BlockToken.CodeBlock (None, "let message = \"Hello, World!\"")
             ]
         
         let actual = parseBlocks input    

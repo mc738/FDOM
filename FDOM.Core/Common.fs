@@ -36,7 +36,7 @@ module DOM =
     and CodeBlock =
         { Style: Style
           Content: InlineContent list }
-    
+
     /// A list block
     /// Can represent an ordered or unordered list.
     and ListBlock =
@@ -50,9 +50,13 @@ module DOM =
         { Style: Style
           Content: InlineContent list }
 
-    and ImageBlock = { Source: ImageSource; Style: Style }
-
-    and ImageSource = Path of string
+    and ImageBlock =
+        { Source: string
+          Title: string
+          AltText: string
+          Height: string option
+          Width: string option
+          Style: Style }
 
     and BlockContent =
         | Header of HeaderBlock
@@ -74,7 +78,7 @@ module DOM =
           Title: HeaderBlock option
           Name: string
           Content: BlockContent list }
-        
+
         /// Get indexed headers from a section and pass the into a handler function to generate indexes.
         member section.GetIndexes<'I>(indexHandler: InlineContent list -> 'I) =
             section.Content
@@ -82,11 +86,10 @@ module DOM =
                 match c with
                 | Header h ->
                     match h.Indexed with
-                    | true ->
-                        Some <| indexHandler h.Content
+                    | true -> Some <| indexHandler h.Content
                     | false -> None
                 | _ -> None)
-        
+
     and Resource =
         { Name: string
           Path: string
@@ -102,10 +105,11 @@ module DOM =
 
         member doc.SnakeCaseName = doc.Name.ToLower().Replace(' ', '_')
 
-        /// Get indexed headers from a document and pass the into a handler function to generate indexes.         
+        /// Get indexed headers from a document and pass the into a handler function to generate indexes.
         member doc.GetIndexes(indexHandler: InlineContent list -> string) =
-            doc.Sections |> List.collect (fun s -> s.GetIndexes indexHandler)
-                
+            doc.Sections
+            |> List.collect (fun s -> s.GetIndexes indexHandler)
+
 
     type RenderedDocument = { Path: string; VirtualPath: string }
 
@@ -143,7 +147,7 @@ module DOM =
 
     let createCode style content =
         BlockContent.Code { Style = style; Content = content }
-    
+
     let createListItem style content : ListItem = { Style = style; Content = content }
 
     let createList ordered style items =
@@ -156,8 +160,14 @@ module DOM =
 
     let createUnorderedList style items = createList false style items
 
-    let createImage style source =
-        BlockContent.Image { Source = source; Style = style }
+    let createImage style source title altText height width =
+        { Source = source
+          Title = title
+          AltText = altText
+          Height = height
+          Width = width
+          Style = style }
+        |> BlockContent.Image
 
     let createText text = InlineContent.Text { Content = text }
 

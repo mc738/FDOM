@@ -223,3 +223,9 @@ let renderFromTemplate
     renderFromParsedTemplate (Mustache.parse template) values stylesheets scriptSources document
 
 let renderFromBlocks (blocks: DOM.BlockContent list) = renderBlocks blocks
+
+let renderTitle (title: DOM.HeaderBlock) =
+    renderHeader title
+    
+let renderDescription (description: DOM.ParagraphBlock) =
+    renderParagraph description

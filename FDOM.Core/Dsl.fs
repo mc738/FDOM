@@ -28,6 +28,8 @@ module General =
 
     let code style content = DOM.createCode style content
     
+    let img style source title altText height width = DOM.createImage style source title altText height width
+    
     let ol style items = DOM.createOrderedList style items
 
     let ul style items = DOM.createUnorderedList style items
