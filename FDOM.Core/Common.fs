@@ -69,9 +69,12 @@ module DOM =
 
     and InlineSpan = { Content: string; Style: Style }
 
+    and InlineLink = { Content: string; Url: string; Style: Style }
+    
     and InlineContent =
         | Text of InlineText
         | Span of InlineSpan
+        | Link of InlineLink
 
     and Section =
         { Style: Style
@@ -174,6 +177,10 @@ module DOM =
     let createSpan style text =
         InlineContent.Span { Style = style; Content = text }
 
+    
+    let createLink style text url =
+        InlineContent.Link { Style = style; Content = text; Url = url }
+    
     let createSection style title name content =
         { Style = style
           Title = title

@@ -183,7 +183,7 @@ type BlockParsing() =
         let actual = parseBlocks input
 
         Assert.AreEqual(expected, actual)
-        
+
     [<TestMethod>]
     member this.``Parse image``() =
 
@@ -196,7 +196,7 @@ type BlockParsing() =
         let actual = parseBlocks input
 
         Assert.AreEqual(expected, actual)
-    
+
 
 [<TestClass>]
 type InlineParsing() =
@@ -270,9 +270,27 @@ type InlineParsing() =
 
         Assert.AreEqual(expected, actual)
 
+    [<TestMethod>]
+    member _.``Parse paragraph with link``() =
+
+        let input =
+            "This is a [link](https://www.example.com), hopefully it works!"
+
+        let expected =
+            [ DOM.InlineContent.Text { Content = "This is a " }
+              DOM.InlineContent.Link
+                  { Content = "link"
+                    Url = "https://www.example.com"
+                    Style = DOM.Style.Default }
+              DOM.InlineContent.Text { Content = ", hopefully it works!" } ]
+
+        let actual = InlineParser.parseInlineContent input
+        
+        Assert.AreEqual(expected, actual)
+
 [<TestClass>]
 type Processing() =
-    
+
     [<TestMethod>]
     member _.``Create image block``() =
         let input =
@@ -291,7 +309,7 @@ type Processing() =
             Processing.createImageBlock input
 
         Assert.AreEqual(expected, actual)
-        
+
     [<TestMethod>]
     member _.``Create image block no meta``() =
         let input =
@@ -310,7 +328,7 @@ type Processing() =
             Processing.createImageBlock input
 
         Assert.AreEqual(expected, actual)
-        
+
     [<TestMethod>]
     member _.``Create image block just height meta``() =
         let input =

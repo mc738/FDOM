@@ -238,7 +238,7 @@ module BlockParser =
 /// The inline parse takes block tokens and creates a DOM.
 module InlineParser =
 
-    let controlChars = [ '_'; '*'; '`' ]
+    let controlChars = [ '_'; '*'; '`'; '[' ]
 
     let isChar (chars: char list) c =
         chars
@@ -357,6 +357,20 @@ module InlineParser =
                             DOM.InlineContent.Span
                                 { Content = sub
                                   Style = DOM.Style.Ref [ "code" ] }
+
+                        (state @ [ content ], next)
+                    | '[' ->
+                        let (text, next) =
+                            readUntilChar input ']' true (i + 1)
+
+                        let (url, next) =
+                            readUntilChar input ')' true (next + 1)
+
+                        let content =
+                            DOM.InlineContent.Link
+                                { Content = text
+                                  Url = url
+                                  Style = DOM.Style.Default }
 
                         (state @ [ content ], next)
                     | _ ->
