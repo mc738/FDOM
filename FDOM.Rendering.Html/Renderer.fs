@@ -105,15 +105,19 @@ module private Blocks =
 
         sprintf "<%s%s>%s</%s>" tag (renderStyle list.Style) content tag
 
-    let renderImage = "Not implemented" // TODO Implement this!
-
+    let renderImage (img: DOM.ImageBlock) =
+        let height = img.Height |> Option.map (fun h -> $" height=\"{h}\"") |> Option.defaultValue ""
+        let width = img.Width |> Option.map (fun w -> $" width=\"{w}\"") |> Option.defaultValue ""
+        
+        $"""<img src="{img.Source}" alt="{img.AltText}" title="{img.Title}"{height}{width}{renderStyle img.Style}>"""
+        
     let renderBlock block =
         match block with
         | DOM.BlockContent.Header h -> renderHeader h
         | DOM.BlockContent.Paragraph p -> renderParagraph p
         | DOM.BlockContent.Code c -> renderCode c
         | DOM.BlockContent.List l -> renderList l
-        | DOM.BlockContent.Image i -> renderImage
+        | DOM.BlockContent.Image i -> renderImage i
 
     let renderBlocks blocks = (blocks |> List.map renderBlock) +> ""
 
