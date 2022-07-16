@@ -1,6 +1,7 @@
 ﻿[<RequireQualifiedAccess>]
 module FDOM.Rendering.Html
 
+open System
 open System.Text.Encodings.Web
 open FDOM.Core.Common
 open Fluff.Core
@@ -64,7 +65,18 @@ module private Inline =
         | DOM.Link l -> l.Content
 
 
-    let slugify (value: string) = value.ToLower().Replace(" ", "-")
+    let slugify (name: string) =
+        name
+        |> Seq.fold
+            (fun acc c ->
+                match c with
+                | _ when Char.IsLetterOrDigit c -> acc @ [ Char.ToLower c ]
+                | _ when c = ' ' -> acc @ [ '_' ]
+                | _ when c = '-' -> acc @ [ c ]
+                | _ when c = '.' -> acc @ [ '-' ]
+                | _ -> acc)
+            []
+        |> fun c -> String.Join("", c)
 
     let renderInlineItemsText (items: DOM.InlineContent list) =
         items

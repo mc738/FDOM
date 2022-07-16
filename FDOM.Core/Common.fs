@@ -19,6 +19,8 @@ module DOM =
           Content: InlineContent list
           Indexed: bool }
 
+        member h.GetRawText() = InlineContent.GetRawText h.Content
+
     and HeaderLevel =
         | H1
         | H2
@@ -33,9 +35,13 @@ module DOM =
         { Style: Style
           Content: InlineContent list }
 
+        member p.GetRawText() = InlineContent.GetRawText p.Content
+
     and CodeBlock =
         { Style: Style
           Content: InlineContent list }
+
+        member c.GetRawText() = InlineContent.GetRawText c.Content
 
     /// A list block
     /// Can represent an ordered or unordered list.
@@ -65,6 +71,15 @@ module DOM =
         | List of ListBlock
         | Image of ImageBlock
 
+        member bc.GetRawText() =
+            match bc with
+            | Header h -> h.GetRawText()
+            | Paragraph p -> p.GetRawText()
+            | Code c -> c.GetRawText()
+            | List _ -> ""
+            | Image i -> i.Title
+
+
     and InlineText = { Content: string }
 
     and InlineSpan = { Content: string; Style: Style }
@@ -78,6 +93,15 @@ module DOM =
         | Text of InlineText
         | Span of InlineSpan
         | Link of InlineLink
+
+        static member GetRawText(content: InlineContent list) =
+            content
+            |> List.map (fun c ->
+                match c with
+                | InlineContent.Text t -> t.Content
+                | InlineContent.Span s -> s.Content
+                | InlineContent.Link l -> l.Content)
+            |> String.concat ""
 
     and Section =
         { Style: Style
@@ -109,12 +133,16 @@ module DOM =
           Sections: Section list
           Resources: Resource list }
 
-        member doc.SnakeCaseName = doc.Name.ToLower().Replace(' ', '_')
+        member doc.SnakeCaseName =
+            doc.Name.ToLower().Replace(' ', '_')
 
         /// Get indexed headers from a document and pass the into a handler function to generate indexes.
         member doc.GetIndexes(indexHandler: InlineContent list -> string) =
             doc.Sections
             |> List.collect (fun s -> s.GetIndexes indexHandler)
+            
+        member doc.GetTitleText() =
+            doc.Title |> Option.map (fun t -> t.GetRawText()) |> Option.defaultValue "[unnamed document]"
 
 
     type RenderedDocument = { Path: string; VirtualPath: string }
@@ -274,7 +302,10 @@ module Formatting =
                 )
 
             // One final trim to remove any extra spaces. Could be more efficient but it should work.
-            Formatters.Create(List.concat [ regexReplacements; [ Trim ] ])
+            Formatters.Create(
+                List.concat [ regexReplacements
+                              [ Trim ] ]
+            )
 
         member formatters.Run(input) =
             formatters.Items
