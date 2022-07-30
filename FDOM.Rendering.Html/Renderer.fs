@@ -45,7 +45,7 @@ module private Inline =
 
     let renderLink (link: DOM.InlineLink) =
         $"""<a href="{link.Url}">{link.Content}</a>"""
-    
+
     //let renderSpans (spans: DOM.InlineSpan list) = (spans |> List.map renderSpan) +> ""
 
     let renderInlineContent (content: DOM.InlineContent) =
@@ -105,7 +105,7 @@ module private Blocks =
 
     let renderCode (code: DOM.CodeBlock) =
         $"<pre{renderStyle code.Style}><code>{renderInlineItems code.Content}</code></pre>"
-    
+
     let renderListItem (item: DOM.ListItem) =
 
         sprintf "<li%s>%s</li>" (renderStyle item.Style) (renderInlineItems item.Content)
@@ -123,11 +123,18 @@ module private Blocks =
         sprintf "<%s%s>%s</%s>" tag (renderStyle list.Style) content tag
 
     let renderImage (img: DOM.ImageBlock) =
-        let height = img.Height |> Option.map (fun h -> $" height=\"{h}\"") |> Option.defaultValue ""
-        let width = img.Width |> Option.map (fun w -> $" width=\"{w}\"") |> Option.defaultValue ""
-        
+        let height =
+            img.Height
+            |> Option.map (fun h -> $" height=\"{h}\"")
+            |> Option.defaultValue ""
+
+        let width =
+            img.Width
+            |> Option.map (fun w -> $" width=\"{w}\"")
+            |> Option.defaultValue ""
+
         $"""<img src="{img.Source}" alt="{img.AltText}" title="{img.Title}"{height}{width}{renderStyle img.Style}>"""
-        
+
     let renderBlock block =
         match block with
         | DOM.BlockContent.Header h -> renderHeader h
@@ -137,6 +144,8 @@ module private Blocks =
         | DOM.BlockContent.Image i -> renderImage i
 
     let renderBlocks blocks = (blocks |> List.map renderBlock) +> ""
+
+    let blockRewriter (fn: DOM.BlockContent -> DOM.BlockContent) (block: DOM.BlockContent) = fn block
 
 [<AutoOpen>]
 module private BoilerPlate =
@@ -170,7 +179,9 @@ module private Document =
         sprintf """<script src="%s"></script>""" reference
 
 let getIndexes (document: DOM.Document) =
-        document.GetIndexes(renderInlineItemsText)
+    document.GetIndexes(renderInlineItemsText)
+
+let renderInlineItems (items: DOM.InlineContent list) = Inline.renderInlineItems items
 
 let render (layout: Layout) (stylesheets: string list) (scriptSources: string list) (document: DOM.Document) =
 
@@ -223,14 +234,12 @@ let renderFromParsedTemplate
 
     let data =
         { values with
-              Values =
-                  values
-                      .Values
-                      .Add(
-                          "content",
-                          renderArticle document.Sections
-                          |> Mustache.Value.Scalar
-                      ) }
+            Values =
+                values.Values.Add(
+                    "content",
+                    renderArticle document.Sections
+                    |> Mustache.Value.Scalar
+                ) }
 
     Mustache.replace data true template
 
@@ -245,8 +254,16 @@ let renderFromTemplate
 
 let renderFromBlocks (blocks: DOM.BlockContent list) = renderBlocks blocks
 
-let renderTitle (title: DOM.HeaderBlock) =
-    renderHeader title
-    
-let renderDescription (description: DOM.ParagraphBlock) =
-    renderParagraph description
+let renderBlocksWithTemplate (template: Mustache.Token list) (data: Mustache.Data) (blocks: DOM.BlockContent list) =
+    let render =
+        [ "<article>"
+          renderBlocks blocks
+          "</article>" ]
+        +> ""
+
+    { data with Values = data.Values.Add("content", Mustache.Scalar render) }
+    |> fun d -> Mustache.replace d true template
+
+let renderTitle (title: DOM.HeaderBlock) = renderHeader title
+
+let renderDescription (description: DOM.ParagraphBlock) = renderParagraph description

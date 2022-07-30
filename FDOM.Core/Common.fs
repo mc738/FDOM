@@ -144,7 +144,6 @@ module DOM =
         member doc.GetTitleText() =
             doc.Title |> Option.map (fun t -> t.GetRawText()) |> Option.defaultValue "[unnamed document]"
 
-
     type RenderedDocument = { Path: string; VirtualPath: string }
 
     /// A helper to create a header block.

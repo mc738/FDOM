@@ -5,6 +5,9 @@ open System.ComponentModel
 open System.Runtime.Serialization
 open System.Text
 open System.Text.Encodings.Web
+open System.Text.RegularExpressions
+open System.Xml.Linq
+open FDOM.Core
 open FDOM.Core.Common
 open FDOM.Core.Common
 open FDOM.Core.Common
@@ -467,14 +470,20 @@ module Processing =
         ul Style.none (values |> List.map createListItem)
 
     let rec collectOrderedListItems (collected: string list) (remaining: BlockParser.BlockToken list) =
-        match remaining.Head with
-        | BlockParser.BlockToken.OrderListItem v -> collectOrderedListItems (collected @ [ v ]) remaining.Tail
-        | _ -> (collected, remaining)
+        match remaining |> List.tryHead with
+        | Some item ->
+            match item with
+            | BlockParser.BlockToken.OrderListItem v -> collectOrderedListItems (collected @ [ v ]) remaining.Tail
+            | _ -> (collected, remaining)
+        | None -> (collected, remaining)
 
     let rec collectUnorderedListItems (collected: string list) (remaining: BlockParser.BlockToken list) =
-        match remaining.Head with
-        | BlockParser.BlockToken.UnorderedListItem v -> collectUnorderedListItems (collected @ [ v ]) remaining.Tail
-        | _ -> (collected, remaining)
+        match remaining |> List.tryHead with
+        | Some item ->
+            match item with
+            | BlockParser.BlockToken.UnorderedListItem v -> collectUnorderedListItems (collected @ [ v ]) remaining.Tail
+            | _ -> (collected, remaining)
+        | None -> (collected, remaining)
 
     let private append (blocks: DOM.BlockContent list) block = blocks @ [ block ]
 
@@ -512,6 +521,7 @@ module Processing =
 type Parser(blocks: BlockParser.BlockToken list) =
 
     static member ParseLines(lines) =
+        
         let input = BlockParser.Input.Create(lines)
 
         let rec handler (state, i) =
@@ -521,4 +531,62 @@ type Parser(blocks: BlockParser.BlockToken list) =
 
         Parser(BlockParser.parseBlocks input)
 
+    static member ParseLinesAndMetadata(lines) =
+        let rec extract (acc, remaining: string list) =
+            match remaining |> List.tryHead with
+            | Some l ->
+                match l.StartsWith("<meta"), String.IsNullOrWhiteSpace(l) with
+                | true, _ -> extract(acc @ [ l ], remaining.Tail)
+                | _, true -> extract(acc, remaining.Tail)
+                | false, false -> acc, remaining
+            | None -> acc, remaining
+        
+        let (rawMetadata, remaining) = extract([], lines)
+        
+        let input = BlockParser.Input.Create(remaining)
+
+        let rec handler (state, i) =
+            match BlockParser.tryParseBlock input i with
+            | Some (token, next) -> handler (state @ [ token ], next)
+            | None -> state
+
+        let metadata =
+            rawMetadata
+            |> List.choose (fun rmd ->
+                
+                //let parse =
+                let name = Regex.Match(rmd, """(?<=(<meta name="))(?[A-Za-z0-9\-:]+)""")
+                let content = Regex.Match(rmd, """(?<=(content="))(?[A-Za-z0-9\-\s]+)""")
+                
+                match name.Success, content.Success with
+                | true, true -> Some(name.Value, content.Value)
+                | _ -> None)
+            |> Map.ofList
+        
+        Parser(BlockParser.parseBlocks input), metadata
+
+        
+    
+    member parser.ExtractMetadata() =
+        let rec extract (acc, line: string, remaining: string list) =
+            match line.StartsWith("<meta"), String.IsNullOrWhiteSpace(line) with
+            | true, _ ->
+                match remaining |> List.tryHead with
+                | Some nl -> extract(acc @ [ line ], nl, remaining.Tail)
+                | None -> acc, remaining
+            | _, true ->
+                match remaining |> List.tryHead with
+                | Some nl -> extract(acc, nl, remaining.Tail)
+                | None -> acc, remaining 
+            | false, false -> acc, remaining
+            
+        ()
+            
+        //let (metadata, remaining) = extract ([], )
+        
+        
+        //Parser(remaining)
+        
+    
     member parser.CreateBlockContent() = Processing.processBlocks blocks
+
