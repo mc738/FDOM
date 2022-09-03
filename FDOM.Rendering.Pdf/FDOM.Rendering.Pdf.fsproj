@@ -14,7 +14,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\FreDF\FreDF.Core\FreDF.Core.fsproj" />
-      <ProjectReference Include="..\FDOM.Core\FDOM.Core.fsproj" />
     </ItemGroup>
 
 </Project>
