@@ -3,7 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <RootNamespace>FDOM.Consple</RootNamespace>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
