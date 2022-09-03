@@ -520,8 +520,48 @@ module Processing =
 
 type Parser(blocks: BlockParser.BlockToken list) =
 
+    static member ExtractMetadata(lines: string list) =
+        // Extract metadata.
+        // TODO clean up.
+
+        match lines.Length > 0 with
+        | true ->
+            let rec extract (acc, line: string, remaining: string list) =
+                match line.StartsWith("<meta"), String.IsNullOrWhiteSpace(line) with
+                | true, _ ->
+                    match remaining |> List.tryHead with
+                    | Some nl -> extract (acc @ [ line ], nl, remaining.Tail)
+                    | None -> acc, remaining
+                | _, true ->
+                    match remaining |> List.tryHead with
+                    | Some nl -> extract (acc, nl, remaining.Tail)
+                    | None -> acc, remaining
+                | false, false -> acc, line :: remaining
+
+            let (rawMetadata, remaining) =
+                extract ([], lines.Head, lines.Tail)
+
+            let metadata =
+                rawMetadata
+                |> List.choose (fun rmd ->
+
+                    //let parse =
+                    let name =
+                        Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:]+)""")
+
+                    let content =
+                        Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-\s]+)""")
+
+                    match name.Success, content.Success with
+                    | true, true -> Some(name.Value, content.Value)
+                    | _ -> None)
+                |> Map.ofList
+
+            metadata, remaining
+        | false -> Map.empty, []
+
     static member ParseLines(lines) =
-        
+
         let input = BlockParser.Input.Create(lines)
 
         let rec handler (state, i) =
@@ -536,14 +576,16 @@ type Parser(blocks: BlockParser.BlockToken list) =
             match remaining |> List.tryHead with
             | Some l ->
                 match l.StartsWith("<meta"), String.IsNullOrWhiteSpace(l) with
-                | true, _ -> extract(acc @ [ l ], remaining.Tail)
-                | _, true -> extract(acc, remaining.Tail)
+                | true, _ -> extract (acc @ [ l ], remaining.Tail)
+                | _, true -> extract (acc, remaining.Tail)
                 | false, false -> acc, remaining
             | None -> acc, remaining
-        
-        let (rawMetadata, remaining) = extract([], lines)
-        
-        let input = BlockParser.Input.Create(remaining)
+
+        let (rawMetadata, remaining) =
+            extract ([], lines)
+
+        let input =
+            BlockParser.Input.Create(remaining)
 
         let rec handler (state, i) =
             match BlockParser.tryParseBlock input i with
@@ -553,40 +595,41 @@ type Parser(blocks: BlockParser.BlockToken list) =
         let metadata =
             rawMetadata
             |> List.choose (fun rmd ->
-                
+
                 //let parse =
-                let name = Regex.Match(rmd, """(?<=(<meta name="))(?[A-Za-z0-9\-:]+)""")
-                let content = Regex.Match(rmd, """(?<=(content="))(?[A-Za-z0-9\-\s]+)""")
-                
+                let name =
+                    Regex.Match(rmd, """(?<=(<meta name="))(?[A-Za-z0-9\-:]+)""")
+
+                let content =
+                    Regex.Match(rmd, """(?<=(content="))(?[A-Za-z0-9\-\s]+)""")
+
                 match name.Success, content.Success with
                 | true, true -> Some(name.Value, content.Value)
                 | _ -> None)
             |> Map.ofList
-        
+
         Parser(BlockParser.parseBlocks input), metadata
 
-        
-    
+    (*
     member parser.ExtractMetadata() =
         let rec extract (acc, line: string, remaining: string list) =
             match line.StartsWith("<meta"), String.IsNullOrWhiteSpace(line) with
             | true, _ ->
                 match remaining |> List.tryHead with
-                | Some nl -> extract(acc @ [ line ], nl, remaining.Tail)
+                | Some nl -> extract (acc @ [ line ], nl, remaining.Tail)
                 | None -> acc, remaining
             | _, true ->
                 match remaining |> List.tryHead with
-                | Some nl -> extract(acc, nl, remaining.Tail)
-                | None -> acc, remaining 
+                | Some nl -> extract (acc, nl, remaining.Tail)
+                | None -> acc, remaining
             | false, false -> acc, remaining
-            
-        ()
-            
-        //let (metadata, remaining) = extract ([], )
-        
-        
-        //Parser(remaining)
-        
-    
-    member parser.CreateBlockContent() = Processing.processBlocks blocks
 
+        ()
+    *)
+    //let (metadata, remaining) = extract ([], )
+
+
+    //Parser(remaining)
+
+
+    member parser.CreateBlockContent() = Processing.processBlocks blocks

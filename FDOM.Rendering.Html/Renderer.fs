@@ -254,14 +254,20 @@ let renderFromTemplate
 
 let renderFromBlocks (blocks: DOM.BlockContent list) = renderBlocks blocks
 
-let renderBlocksWithTemplate (template: Mustache.Token list) (data: Mustache.Data) (blocks: DOM.BlockContent list) =
-    let render =
-        [ "<article>"
-          renderBlocks blocks
-          "</article>" ]
-        +> ""
+let renderArticle (blocks: DOM.BlockContent list) =
+    [ "<article>"
+      renderBlocks blocks
+      "</article>" ]
+    +> ""
 
-    { data with Values = data.Values.Add("content", Mustache.Scalar render) }
+let renderBlocksWithTemplate (template: Mustache.Token list) (data: Mustache.Data) (blocks: DOM.BlockContent list) =
+    //let render =
+    //    [ "<article>"
+    //      renderBlocks blocks
+    //      "</article>" ]
+    //    +> ""
+
+    { data with Values = data.Values.Add("content", Mustache.Scalar <| renderArticle blocks) }
     |> fun d -> Mustache.replace d true template
 
 let renderTitle (title: DOM.HeaderBlock) = renderHeader title
