@@ -547,10 +547,10 @@ type Parser(blocks: BlockParser.BlockToken list) =
 
                     //let parse =
                     let name =
-                        Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:]+)""")
+                        Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
 
                     let content =
-                        Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-\s]+)""")
+                        Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
 
                     match name.Success, content.Success with
                     | true, true -> Some(name.Value, content.Value)
@@ -598,10 +598,10 @@ type Parser(blocks: BlockParser.BlockToken list) =
 
                 //let parse =
                 let name =
-                    Regex.Match(rmd, """(?<=(<meta name="))(?[A-Za-z0-9\-:\_]+)""")
+                    Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
 
                 let content =
-                    Regex.Match(rmd, """(?<=(content="))(?[A-Za-z0-9\-\s\_]+)""")
+                    Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
 
                 match name.Success, content.Success with
                 | true, true -> Some(name.Value, content.Value)
