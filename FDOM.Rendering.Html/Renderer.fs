@@ -57,7 +57,6 @@ module private Inline =
     let renderInlineItems (items: DOM.InlineContent list) =
         (items |> List.map renderInlineContent) +> ""
 
-
     let renderInlineItemText (item: DOM.InlineContent) =
         match item with
         | DOM.Text t -> t.Content
