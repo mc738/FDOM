@@ -284,8 +284,38 @@ type InlineParsing() =
                     Style = DOM.Style.Default }
               DOM.InlineContent.Text { Content = ", hopefully it works!" } ]
 
-        let actual = InlineParser.parseInlineContent input
-        
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]
+    member _.``Parse inline text content with underscore``() =
+
+        let input = "hello_world"
+
+        let expected =
+            [ DOM.InlineContent.Text { Content = "hello_world" } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+
+
+    [<TestMethod>]
+    member _.``Parse inline span content with underscore``() =
+
+        let input = "***hello_world***"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello_world"
+                    Style = DOM.Style.Ref [ "b"; "i" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
         Assert.AreEqual(expected, actual)
 
 [<TestClass>]
