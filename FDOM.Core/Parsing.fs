@@ -376,6 +376,13 @@ module InlineParser =
                                   Style = DOM.Style.Default }
 
                         (state @ [ content ], next)
+                    | '_' ->
+                        // To fix issue #8 and #9
+                        // Read until next control character and append to prev?
+                        let (sub, next) =
+                            readUntilCtrlChar input (i + 1)
+                            
+                        (state @ [ DOM.InlineContent.Text { Content = sub } ], next)
                     | _ ->
                         let (sub, next) = readUntilCtrlChar input i
 
