@@ -102,6 +102,12 @@ module DOM =
                 | InlineContent.Span s -> s.Content
                 | InlineContent.Link l -> l.Content)
             |> String.concat ""
+            
+        member ic.Append(str: string) =
+            match ic with
+            | Text it -> { it with Content = $"{it.Content}{str}" } |> InlineContent.Text
+            | Span is -> { is with Content = $"{is.Content}{str}" } |> InlineContent.Span
+            | Link il -> { il with Content = $"{il.Content}{str}" } |> InlineContent.Link
 
     and Section =
         { Style: Style

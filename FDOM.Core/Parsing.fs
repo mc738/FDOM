@@ -382,6 +382,8 @@ module InlineParser =
                         let (sub, next) =
                             readUntilCtrlChar input (i + 1)
                             
+                        // TODO get last item from state and append "_" + sub to it.
+                            
                         (state @ [ DOM.InlineContent.Text { Content = sub } ], next)
                     | _ ->
                         let (sub, next) = readUntilCtrlChar input i
