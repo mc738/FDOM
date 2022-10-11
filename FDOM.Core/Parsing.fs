@@ -342,9 +342,21 @@ module InlineParser =
                         let ((sub, next), classes) =
                             match lookAhead input i 1, lookAhead input i 2 with
                             | Some (c1), Some (c2) when c1 = '*' && c2 = '*' ->
-                                readUntilString input "***" true i, [ "b"; "i" ]
-                            | Some (c1), _ when c1 = '*' -> readUntilString input "**" true i, [ "b" ]
-                            | _ -> readUntilChar input '*' true (i + 1), [ "i" ]
+                                let (sub, next) = readUntilString input "***" true i
+                                let adjustedSub =
+                                    if (next >= input.Length) then sub.Remove(sub.Length - 3, 3) else sub 
+                                
+                                (adjustedSub, next), [ "b"; "i" ]
+                            | Some (c1), _ when c1 = '*' ->
+                                let (sub, next) = readUntilString input "**" true i
+                                let adjustedSub =
+                                    if (next >= input.Length) then sub.Remove(sub.Length - 2, 2) else sub 
+                                (adjustedSub, next), [ "b" ]
+                            | _ ->
+                                let (sub, next) = readUntilChar input '*' true (i + 1)
+                                let adjustedSub =
+                                    if (next >= input.Length) then sub.Remove(sub.Length - 1, 1) else sub
+                                readUntilChar input '*' true (i + 1), [ "i" ]
 
                         let content =
                             DOM.InlineContent.Span

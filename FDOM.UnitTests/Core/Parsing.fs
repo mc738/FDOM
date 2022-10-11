@@ -289,6 +289,7 @@ type InlineParsing() =
 
         Assert.AreEqual(expected, actual)
 
+    /// <summary>Test for fix to issues #8 and #9</summary>
     [<TestMethod>]
     member _.``Parse inline text content with underscore``() =
 
@@ -302,7 +303,7 @@ type InlineParsing() =
 
         Assert.AreEqual(expected, actual)
 
-
+    /// <summary>Test for fix to issues #8 and #9</summary>
     [<TestMethod>]
     member _.``Parse inline span content with underscore``() =
 
@@ -317,6 +318,57 @@ type InlineParsing() =
             InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
+
+    
+    /// <summary>Test for fix to issues #8 and #4</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content to line end with b and i``() =
+
+        let input = "***hello world***"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello world"
+                    Style = DOM.Style.Ref [ "b"; "i" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+        
+    
+    /// <summary>Test for fix to issues #8 and #4</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content to line end with b``() =
+
+        let input = "**hello world**"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello world"
+                    Style = DOM.Style.Ref [ "b" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+        
+     /// <summary>Test for fix to issues #8 and #4</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content to line end with i``() =
+
+        let input = "*hello world*"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello world"
+                    Style = DOM.Style.Ref [ "i" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+
 
 [<TestClass>]
 type Processing() =
