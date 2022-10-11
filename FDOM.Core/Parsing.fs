@@ -391,11 +391,22 @@ module InlineParser =
                         let (sub, next) =
                             readUntilCtrlChar input (i + 1)
 
-                        // TODO get last item from state and append "_" + sub to it.
+                        // Get last item from state and append "_" + sub to it.
+                        // Fix for #8 and #9
+                        let newIc =
+                            state
+                            |> List.rev
+                            |> List.tryHead
+                            |> Option.map (fun ic -> ic.Append($"_{sub}"))
+                            |> Option.defaultWith (fun _ -> DOM.InlineContent.Text { Content = $"_{sub}" })
 
+                        // Not the prettiest solution but it does get the job done.
+                        // Could be more efficient but in general this *shouldn't* be too much of an issue.
+                        // It passes tests for now. This could be reworked properly.
                         (state
-                         @ [ DOM.InlineContent.Text { Content = sub } ],
-                         next)
+                         |> List.rev
+                         |> List.tail
+                         |> fun t -> newIc :: t |> List.rev, next)
                     | _ ->
                         let (sub, next) = readUntilCtrlChar input i
 
