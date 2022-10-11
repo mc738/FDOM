@@ -339,24 +339,21 @@ module InlineParser =
                 let (newState, next) =
                     match c with
                     | '*' ->
+                        // Fix for issue #4 - if `next` is the end of input, remove `len` from the end of `str`
+                        // This sorts issues where `***Hello world***` would parse as `Hello world***`
+                        // if at the end of input.
+                        let trimEnd (len: int) (str: string, next: int) =
+                            if (next >= input.Length) then
+                                str.Remove(str.Length - len, len), next
+                            else
+                                str, next
+
                         let ((sub, next), classes) =
                             match lookAhead input i 1, lookAhead input i 2 with
                             | Some (c1), Some (c2) when c1 = '*' && c2 = '*' ->
-                                let (sub, next) = readUntilString input "***" true i
-                                let adjustedSub =
-                                    if (next >= input.Length) then sub.Remove(sub.Length - 3, 3) else sub 
-                                
-                                (adjustedSub, next), [ "b"; "i" ]
-                            | Some (c1), _ when c1 = '*' ->
-                                let (sub, next) = readUntilString input "**" true i
-                                let adjustedSub =
-                                    if (next >= input.Length) then sub.Remove(sub.Length - 2, 2) else sub 
-                                (adjustedSub, next), [ "b" ]
-                            | _ ->
-                                let (sub, next) = readUntilChar input '*' true (i + 1)
-                                let adjustedSub =
-                                    if (next >= input.Length) then sub.Remove(sub.Length - 1, 1) else sub
-                                readUntilChar input '*' true (i + 1), [ "i" ]
+                                readUntilString input "***" true i |> trimEnd 3, [ "b"; "i" ]
+                            | Some (c1), _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ "b" ]
+                            | _ -> readUntilChar input '*' true (i + 1), [ "i" ]
 
                         let content =
                             DOM.InlineContent.Span
@@ -393,10 +390,12 @@ module InlineParser =
                         // Read until next control character and append to prev?
                         let (sub, next) =
                             readUntilCtrlChar input (i + 1)
-                            
+
                         // TODO get last item from state and append "_" + sub to it.
-                            
-                        (state @ [ DOM.InlineContent.Text { Content = sub } ], next)
+
+                        (state
+                         @ [ DOM.InlineContent.Text { Content = sub } ],
+                         next)
                     | _ ->
                         let (sub, next) = readUntilCtrlChar input i
 
