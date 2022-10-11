@@ -284,9 +284,91 @@ type InlineParsing() =
                     Style = DOM.Style.Default }
               DOM.InlineContent.Text { Content = ", hopefully it works!" } ]
 
-        let actual = InlineParser.parseInlineContent input
-        
+        let actual =
+            InlineParser.parseInlineContent input
+
         Assert.AreEqual(expected, actual)
+
+    /// <summary>Test for fix to issues #8 and #9</summary>
+    [<TestMethod>]
+    member _.``Parse inline text content with underscore``() =
+
+        let input = "hello_world"
+
+        let expected =
+            [ DOM.InlineContent.Text { Content = "hello_world" } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+
+    /// <summary>Test for fix to issues #8 and #9</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content with underscore``() =
+
+        let input = "***hello_world***"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello_world"
+                    Style = DOM.Style.Ref [ "b"; "i" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+
+    
+    /// <summary>Test for fix to issues #8 and #4</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content to line end with b and i``() =
+
+        let input = "***hello world***"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello world"
+                    Style = DOM.Style.Ref [ "b"; "i" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+        
+    
+    /// <summary>Test for fix to issues #8 and #4</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content to line end with b``() =
+
+        let input = "**hello world**"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello world"
+                    Style = DOM.Style.Ref [ "b" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+        
+     /// <summary>Test for fix to issues #8 and #4</summary>
+    [<TestMethod>]
+    member _.``Parse inline span content to line end with i``() =
+
+        let input = "*hello world*"
+
+        let expected =
+            [ DOM.InlineContent.Span
+                  { Content = "hello world"
+                    Style = DOM.Style.Ref [ "i" ] } ]
+
+        let actual =
+            InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+
 
 [<TestClass>]
 type Processing() =

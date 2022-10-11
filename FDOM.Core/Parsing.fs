@@ -339,11 +339,20 @@ module InlineParser =
                 let (newState, next) =
                     match c with
                     | '*' ->
+                        // Fix for issue #4 - if `next` is the end of input, remove `len` from the end of `str`
+                        // This sorts issues where `***Hello world***` would parse as `Hello world***`
+                        // if at the end of input.
+                        let trimEnd (len: int) (str: string, next: int) =
+                            if (next >= input.Length) then
+                                str.Remove(str.Length - len, len), next
+                            else
+                                str, next
+
                         let ((sub, next), classes) =
                             match lookAhead input i 1, lookAhead input i 2 with
                             | Some (c1), Some (c2) when c1 = '*' && c2 = '*' ->
-                                readUntilString input "***" true i, [ "b"; "i" ]
-                            | Some (c1), _ when c1 = '*' -> readUntilString input "**" true i, [ "b" ]
+                                readUntilString input "***" true i |> trimEnd 3, [ "b"; "i" ]
+                            | Some (c1), _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ "b" ]
                             | _ -> readUntilChar input '*' true (i + 1), [ "i" ]
 
                         let content =
@@ -376,6 +385,28 @@ module InlineParser =
                                   Style = DOM.Style.Default }
 
                         (state @ [ content ], next)
+                    | '_' ->
+                        // To fix issue #8 and #9
+                        // Read until next control character and append to prev?
+                        let (sub, next) =
+                            readUntilCtrlChar input (i + 1)
+
+                        // Get last item from state and append "_" + sub to it.
+                        // Fix for #8 and #9
+                        let newIc =
+                            state
+                            |> List.rev
+                            |> List.tryHead
+                            |> Option.map (fun ic -> ic.Append($"_{sub}"))
+                            |> Option.defaultWith (fun _ -> DOM.InlineContent.Text { Content = $"_{sub}" })
+
+                        // Not the prettiest solution but it does get the job done.
+                        // Could be more efficient but in general this *shouldn't* be too much of an issue.
+                        // It passes tests for now. This could be reworked properly.
+                        (state
+                         |> List.rev
+                         |> List.tail
+                         |> fun t -> newIc :: t |> List.rev, next)
                     | _ ->
                         let (sub, next) = readUntilCtrlChar input i
 
