@@ -64,6 +64,29 @@ module DOM =
           Width: string option
           Style: Style }
 
+    and TableBlock =
+        {
+            Columns: TableColumn list
+            Rows: TableRow list
+        }
+
+    and TableColumn =
+        {
+            Content: InlineContent list
+            Index: int
+        }
+        
+    and TableRow =
+        {
+            Cells: TableCell list
+        }
+        
+    and TableCell =
+        {
+            ColumnIndex: int
+            Content: InlineContent list
+        }
+    
     and BlockContent =
         | Header of HeaderBlock
         | Paragraph of ParagraphBlock
