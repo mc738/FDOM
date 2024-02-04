@@ -34,11 +34,7 @@ module BlockParser =
         | _ when line.[0] = '#' -> LineType.Header
         | _ when line.[0..2] = @"```" -> LineType.CodeBlockDelimited
         | _ when line.[0] = '*' -> LineType.UnorderedListItem
-        | _ when
-            Char.IsDigit(line.[0])
-            && (line.[1] = '.' || line.[2] = '.')
-            ->
-            LineType.OrderedListItem // A bit of a hack to look for ordered lists. This can be cleaned up!
+        | _ when Char.IsDigit(line.[0]) && (line.[1] = '.' || line.[2] = '.') -> LineType.OrderedListItem // A bit of a hack to look for ordered lists. This can be cleaned up!
         | _ when line.[0] = '!' -> LineType.Image
         | _ when line.[0] = '|' -> LineType.Table
         | _ -> LineType.Text
@@ -51,18 +47,21 @@ module BlockParser =
         | UnorderedListItem of string
         | CodeBlock of string option * string
         | Image of string
+        | Table of string
         | Empty
 
     [<RequireQualifiedAccess>]
     type Input =
         { Lines: Line array }
+
         static member Create(lines: string list) =
             { Lines =
                 lines
                 |> List.mapi (fun i l ->
                     { Number = i + 1
                       Text = l
-                      Type = getLineType l }: Line)
+                      Type = getLineType l }
+                    : Line)
                 |> Array.ofList }
 
         member input.TryGetLine(index) =
@@ -106,8 +105,7 @@ module BlockParser =
         | None -> Error()
         | Some l when l.Type <> LineType.Text -> Error()
         | _ ->
-            let lines, next =
-                input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
+            let lines, next = input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
 
             Ok(BlockToken.Paragraph(formatter lines), next)
 
@@ -131,17 +129,11 @@ module BlockParser =
                     | false -> Some l
 
 
-            let lines, next =
-                input.TryGetUntilTypeOrEnd(curr + 1, LineType.CodeBlockDelimited)
+            let lines, next = input.TryGetUntilTypeOrEnd(curr + 1, LineType.CodeBlockDelimited)
 
             // Special formatter to preserve line breaks.
             Ok(
-                BlockToken.CodeBlock(
-                    lang,
-                    lines
-                    |> List.map (fun l -> l.Text)
-                    |> String.concat Environment.NewLine
-                ),
+                BlockToken.CodeBlock(lang, lines |> List.map (fun l -> l.Text) |> String.concat Environment.NewLine),
                 next
             )
 
@@ -193,6 +185,12 @@ module BlockParser =
         | Some l when l.Type <> LineType.Image -> Error()
         | Some l -> Ok(BlockToken.Image l.Text, curr)
 
+    let tryParseTable (input: Input) curr =
+        match input.TryGetLine curr with
+        | None -> Error()
+        | Some l when l.Type <> LineType.Table -> Error()
+        | Some l -> Ok(BlockToken.Table l.Text, curr)
+
     let tryParseEmptyBlock (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
@@ -211,6 +209,7 @@ module BlockParser =
               tryParseHeaderBlock
               tryParseParagraph formatter
               tryParseImage
+              tryParseTable
               tryParseEmptyBlock ]
             |> List.fold
                 (fun state h ->
@@ -220,13 +219,13 @@ module BlockParser =
                 (Error())
 
         match result with
-        | Ok (token, i) -> Some(token, (i + 1))
+        | Ok(token, i) -> Some(token, (i + 1))
         | Error _ -> None
 
     let parseBlocks input =
         let rec handler (state, i) =
             match tryParseBlock input i with
-            | Some (token, next) -> handler (state @ [ token ], next)
+            | Some(token, next) -> handler (state @ [ token ], next)
             | None -> state
 
         handler ([], 0)
@@ -279,11 +278,7 @@ module InlineParser =
 
         let endIndex = handler from
 
-        (input.[from .. (endIndex - 1)],
-         if inclusive then
-             endIndex + 1
-         else
-             endIndex)
+        (input.[from .. (endIndex - 1)], (if inclusive then endIndex + 1 else endIndex))
 
     let readUntilCtrlChar input from =
         let rec handler i =
@@ -309,14 +304,10 @@ module InlineParser =
                 | false -> handler (i + 1)
             | false -> input.Length
 
-        let endIndex =
-            handler (from + pattern.Length - 1)
+        let endIndex = handler (from + pattern.Length - 1)
 
         (input.[(from + pattern.Length) .. (endIndex - 1)],
-         if inclusive then
-             (endIndex + pattern.Length)
-         else
-             endIndex)
+         if inclusive then (endIndex + pattern.Length) else endIndex)
 
     //type
 
@@ -355,8 +346,7 @@ module InlineParser =
 
                         (state @ [ content ], next)
                     | '`' ->
-                        let sub, next =
-                            readUntilChar input '`' true (i + 1)
+                        let sub, next = readUntilChar input '`' true (i + 1)
                         // Make this a span
                         let content =
                             DOM.InlineContent.Span
@@ -365,11 +355,9 @@ module InlineParser =
 
                         (state @ [ content ], next)
                     | '[' ->
-                        let text, next =
-                            readUntilChar input ']' true (i + 1)
+                        let text, next = readUntilChar input ']' true (i + 1)
 
-                        let url, next =
-                            readUntilChar input ')' true (next + 1)
+                        let url, next = readUntilChar input ')' true (next + 1)
 
                         let content =
                             DOM.InlineContent.Link
@@ -381,8 +369,7 @@ module InlineParser =
                     | '_' ->
                         // To fix issue #8 and #9
                         // Read until next control character and append to prev?
-                        let sub, next =
-                            readUntilCtrlChar input (i + 1)
+                        let sub, next = readUntilCtrlChar input (i + 1)
 
                         // Get last item from state and append "_" + sub to it.
                         // Fix for #8 and #9
@@ -396,15 +383,11 @@ module InlineParser =
                         // Not the prettiest solution but it does get the job done.
                         // Could be more efficient but in general this *shouldn't* be too much of an issue.
                         // It passes tests for now. This could be reworked properly.
-                        (state
-                         |> List.rev
-                         |> List.tail
-                         |> fun t -> newIc :: t |> List.rev, next)
+                        (state |> List.rev |> List.tail |> (fun t -> newIc :: t |> List.rev, next))
                     | _ ->
                         let sub, next = readUntilCtrlChar input i
 
-                        let content =
-                            DOM.InlineContent.Text { Content = sub }
+                        let content = DOM.InlineContent.Text { Content = sub }
 
                         (state @ [ content ], next)
 
@@ -446,9 +429,7 @@ module Processing =
 
     let createCodeBlock (lang: string option) (value: string) =
         code
-            (Style.references [ lang
-                                |> Option.map (fun l -> $"language-{l}")
-                                |> Option.defaultValue "" ])
+            (Style.references [ lang |> Option.map (fun l -> $"language-{l}") |> Option.defaultValue "" ])
             [ DOM.InlineContent.Text { Content = value } ]
 
 
@@ -457,17 +438,13 @@ module Processing =
 
         // For example ![alt text](url "image title"){ height:[height],width:[width] }
 
-        let altText, next =
-            InlineParser.readUntilString value "]" false 1
+        let altText, next = InlineParser.readUntilString value "]" false 1
 
-        let url, next =
-            InlineParser.readUntilChar value ' ' false (next + 2)
+        let url, next = InlineParser.readUntilChar value ' ' false (next + 2)
 
-        let title, next =
-            InlineParser.readUntilChar value '"' false (next + 2)
+        let title, next = InlineParser.readUntilChar value '"' false (next + 2)
 
-        let hw, _ =
-            InlineParser.readUntilChar value '}' false (next + 3)
+        let hw, _ = InlineParser.readUntilChar value '}' false (next + 3)
 
         let height, width =
             hw.Trim().Split(',')
@@ -492,6 +469,9 @@ module Processing =
 
     let createUnorderedListItem (values: string list) =
         ul Style.none (values |> List.map createListItem)
+        
+    let createTable (values: string list) =
+        DOM.BlockContent.Table { Columns = []; Rows = [] }
 
     let rec collectOrderedListItems (collected: string list) (remaining: BlockParser.BlockToken list) =
         match remaining |> List.tryHead with
@@ -509,6 +489,14 @@ module Processing =
             | _ -> (collected, remaining)
         | None -> (collected, remaining)
 
+    let rec collectTableLines (collected: string list) (remaining: BlockParser.BlockToken list) =
+        match remaining |> List.tryHead with
+        | Some item ->
+            match item with
+            | BlockParser.BlockToken.Table v -> collectTableLines (collected @ [ v ]) remaining.Tail
+            | _ -> (collected, remaining)
+        | None -> (collected, remaining)
+
     let private append (blocks: DOM.BlockContent list) block = blocks @ [ block ]
 
     /// Recursively process `BlockToken`s into `BlockContent`.
@@ -521,19 +509,21 @@ module Processing =
                     match remainingBlocks.Head with
                     | BlockParser.BlockToken.Header h -> (createHeaderContent h, remainingBlocks.Tail)
                     | BlockParser.BlockToken.Paragraph p -> (createParagraphContent p, remainingBlocks.Tail)
-                    | BlockParser.BlockToken.CodeBlock (lang, c) -> (createCodeBlock lang c, remainingBlocks.Tail)
+                    | BlockParser.BlockToken.CodeBlock(lang, c) -> (createCodeBlock lang c, remainingBlocks.Tail)
                     | BlockParser.BlockToken.OrderListItem _ ->
-                        let collected, remaining =
-                            collectOrderedListItems [] remainingBlocks
+                        let collected, remaining = collectOrderedListItems [] remainingBlocks
 
                         (createOrderedListItems collected, remaining)
                     | BlockParser.BlockToken.UnorderedListItem _ ->
-                        let collected, remaining =
-                            collectUnorderedListItems [] remainingBlocks
+                        let collected, remaining = collectUnorderedListItems [] remainingBlocks
 
                         (createUnorderedListItem collected, remaining)
 
                     | BlockParser.BlockToken.Image v -> createImageBlock v, remainingBlocks.Tail
+                    | BlockParser.BlockToken.Table _ ->
+                        let collected, remaining = collectTableLines [] remainingBlocks
+
+                        (createTable collected, remaining)
 
                     | BlockParser.BlockToken.Empty _ ->
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
@@ -562,19 +552,16 @@ type Parser(blocks: BlockParser.BlockToken list) =
                     | None -> acc, remaining
                 | false, false -> acc, line :: remaining
 
-            let rawMetadata, remaining =
-                extract ([], lines.Head, lines.Tail)
+            let rawMetadata, remaining = extract ([], lines.Head, lines.Tail)
 
             let metadata =
                 rawMetadata
                 |> List.choose (fun rmd ->
 
                     //let parse =
-                    let name =
-                        Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
+                    let name = Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
 
-                    let content =
-                        Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
+                    let content = Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
 
                     match name.Success, content.Success with
                     | true, true -> Some(name.Value, content.Value)
@@ -590,7 +577,7 @@ type Parser(blocks: BlockParser.BlockToken list) =
 
         let rec handler (state, i) =
             match BlockParser.tryParseBlock input i with
-            | Some (token, next) -> handler (state @ [ token ], next)
+            | Some(token, next) -> handler (state @ [ token ], next)
             | None -> state
 
         Parser(BlockParser.parseBlocks input)
@@ -605,15 +592,13 @@ type Parser(blocks: BlockParser.BlockToken list) =
                 | false, false -> acc, remaining
             | None -> acc, remaining
 
-        let rawMetadata, remaining =
-            extract ([], lines)
+        let rawMetadata, remaining = extract ([], lines)
 
-        let input =
-            BlockParser.Input.Create(remaining)
+        let input = BlockParser.Input.Create(remaining)
 
         let rec handler (state, i) =
             match BlockParser.tryParseBlock input i with
-            | Some (token, next) -> handler (state @ [ token ], next)
+            | Some(token, next) -> handler (state @ [ token ], next)
             | None -> state
 
         let metadata =
@@ -621,11 +606,9 @@ type Parser(blocks: BlockParser.BlockToken list) =
             |> List.choose (fun rmd ->
 
                 //let parse =
-                let name =
-                    Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
+                let name = Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
 
-                let content =
-                    Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
+                let content = Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
 
                 match name.Success, content.Success with
                 | true, true -> Some(name.Value, content.Value)
