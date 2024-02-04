@@ -65,34 +65,32 @@ module DOM =
           Style: Style }
 
     and TableBlock =
-        {
-            Columns: TableColumn list
-            Rows: TableRow list
-        }
+        { Columns: TableColumn list
+          Rows: TableRow list }
 
     and TableColumn =
-        {
-            Content: InlineContent list
-            Index: int
-        }
-        
-    and TableRow =
-        {
-            Cells: TableCell list
-        }
-        
+        { Content: InlineContent list
+          Alignment: TableColumnAlignment
+          Index: int }
+
+    and [<RequireQualifiedAccess>] TableColumnAlignment =
+        | Left
+        | Right
+        | Center
+
+    and TableRow = { Cells: TableCell list }
+
     and TableCell =
-        {
-            ColumnIndex: int
-            Content: InlineContent list
-        }
-    
+        { ColumnIndex: int
+          Content: InlineContent list }
+
     and BlockContent =
         | Header of HeaderBlock
         | Paragraph of ParagraphBlock
         | Code of CodeBlock
         | List of ListBlock
         | Image of ImageBlock
+        | Table of TableBlock
 
         member bc.GetRawText() =
             match bc with
@@ -101,7 +99,7 @@ module DOM =
             | Code c -> c.GetRawText()
             | List _ -> ""
             | Image i -> i.Title
-
+            | Table _ -> ""
 
     and InlineText = { Content: string }
 
@@ -125,12 +123,21 @@ module DOM =
                 | InlineContent.Span s -> s.Content
                 | InlineContent.Link l -> l.Content)
             |> String.concat ""
-            
+
         member ic.Append(str: string) =
             match ic with
-            | Text it -> { it with Content = $"{it.Content}{str}" } |> InlineContent.Text
-            | Span is -> { is with Content = $"{is.Content}{str}" } |> InlineContent.Span
-            | Link il -> { il with Content = $"{il.Content}{str}" } |> InlineContent.Link
+            | Text it ->
+                { it with
+                    Content = $"{it.Content}{str}" }
+                |> InlineContent.Text
+            | Span is ->
+                { is with
+                    Content = $"{is.Content}{str}" }
+                |> InlineContent.Span
+            | Link il ->
+                { il with
+                    Content = $"{il.Content}{str}" }
+                |> InlineContent.Link
 
     and Section =
         { Style: Style
@@ -162,16 +169,16 @@ module DOM =
           Sections: Section list
           Resources: Resource list }
 
-        member doc.SnakeCaseName =
-            doc.Name.ToLower().Replace(' ', '_')
+        member doc.SnakeCaseName = doc.Name.ToLower().Replace(' ', '_')
 
         /// Get indexed headers from a document and pass the into a handler function to generate indexes.
         member doc.GetIndexes(indexHandler: InlineContent list -> string) =
-            doc.Sections
-            |> List.collect (fun s -> s.GetIndexes indexHandler)
-            
+            doc.Sections |> List.collect (fun s -> s.GetIndexes indexHandler)
+
         member doc.GetTitleText() =
-            doc.Title |> Option.map (fun t -> t.GetRawText()) |> Option.defaultValue "[unnamed document]"
+            doc.Title
+            |> Option.map (fun t -> t.GetRawText())
+            |> Option.defaultValue "[unnamed document]"
 
     type RenderedDocument = { Path: string; VirtualPath: string }
 
@@ -297,14 +304,14 @@ module Formatting =
         | StringReplace f -> f.Run(input)
         | Trim -> input.Trim()
         | AddSpaceToLineEnd ->
-            if String.IsNullOrEmpty input |> not
-               && input.[input.Length - 1] <> ' ' then
+            if String.IsNullOrEmpty input |> not && input.[input.Length - 1] <> ' ' then
                 $"{input} "
             else
                 input
 
     type Formatters =
         { Items: Formatter list }
+
         static member Create(formatters) = { Items = formatters }
 
 
@@ -312,10 +319,7 @@ module Formatting =
             let regexMacros =
                 RegexReplaceFormatter.CreateFormatters([ "\%NOW\%", DateTime.Now.ToString("hh:mm dd MMM yy") ])
 
-            Formatters.Create(
-                List.concat [ regexMacros
-                              [ Trim; AddSpaceToLineEnd ] ]
-            )
+            Formatters.Create(List.concat [ regexMacros; [ Trim; AddSpaceToLineEnd ] ])
 
         static member DefaultFormatters() =
             // Most of these might not been needed anymore with `AddSpaceToLineEnd`.
@@ -330,11 +334,7 @@ module Formatting =
                 )
 
             // One final trim to remove any extra spaces. Could be more efficient but it should work.
-            Formatters.Create(
-                List.concat [ regexReplacements
-                              [ Trim ] ]
-            )
+            Formatters.Create(List.concat [ regexReplacements; [ Trim ] ])
 
         member formatters.Run(input) =
-            formatters.Items
-            |> List.fold (fun state f -> formatterHandler f state) input
+            formatters.Items |> List.fold (fun state f -> formatterHandler f state) input
