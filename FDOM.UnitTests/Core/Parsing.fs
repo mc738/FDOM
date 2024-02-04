@@ -12,11 +12,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse paragraph single line``() =
 
-        let input =
-            Input.Create([ "Hello, World!" ])
+        let input = Input.Create([ "Hello, World!" ])
 
-        let expected =
-            [ BlockToken.Paragraph "Hello, World!" ]
+        let expected = [ BlockToken.Paragraph "Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -25,11 +23,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse h1 single line``() =
 
-        let input =
-            Input.Create([ "# Hello, World!" ])
+        let input = Input.Create([ "# Hello, World!" ])
 
-        let expected =
-            [ BlockToken.Header "# Hello, World!" ]
+        let expected = [ BlockToken.Header "# Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -38,11 +34,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse h2 single line``() =
 
-        let input =
-            Input.Create([ "## Hello, World!" ])
+        let input = Input.Create([ "## Hello, World!" ])
 
-        let expected =
-            [ BlockToken.Header "## Hello, World!" ]
+        let expected = [ BlockToken.Header "## Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -51,11 +45,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse ordered list single line``() =
 
-        let input =
-            Input.Create([ "1. Hello, World!" ])
+        let input = Input.Create([ "1. Hello, World!" ])
 
-        let expected =
-            [ BlockToken.OrderListItem "Hello, World!" ]
+        let expected = [ BlockToken.OrderListItem "Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -64,11 +56,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse ordered list double digit single line``() =
 
-        let input =
-            Input.Create([ "99. Hello, World!" ])
+        let input = Input.Create([ "99. Hello, World!" ])
 
-        let expected =
-            [ BlockToken.OrderListItem "Hello, World!" ]
+        let expected = [ BlockToken.OrderListItem "Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -77,11 +67,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse unordered list single line``() =
 
-        let input =
-            Input.Create([ "* Hello, World!" ])
+        let input = Input.Create([ "* Hello, World!" ])
 
-        let expected =
-            [ BlockToken.UnorderedListItem "Hello, World!" ]
+        let expected = [ BlockToken.UnorderedListItem "Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -90,11 +78,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse unordered list 2 lines``() =
 
-        let input =
-            Input.Create([ "* Hello, "; "World!" ])
+        let input = Input.Create([ "* Hello, "; "World!" ])
 
-        let expected =
-            [ BlockToken.UnorderedListItem "Hello, World!" ]
+        let expected = [ BlockToken.UnorderedListItem "Hello, World!" ]
 
         let actual = parseBlocks input
 
@@ -103,15 +89,9 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse code block``() =
 
-        let input =
-            Input.Create(
-                [ "```"
-                  "let msg = \"Hello, World!\""
-                  "```" ]
-            )
+        let input = Input.Create([ "```"; "let msg = \"Hello, World!\""; "```" ])
 
-        let expected =
-            [ BlockToken.CodeBlock(None, "let msg = \"Hello, World!\"") ]
+        let expected = [ BlockToken.CodeBlock(None, "let msg = \"Hello, World!\"") ]
 
         let actual = parseBlocks input
 
@@ -120,12 +100,7 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse header and paragraph``() =
 
-        let input =
-            Input.Create(
-                [ "# Hello, World!"
-                  ""
-                  "This is some text!" ]
-            )
+        let input = Input.Create([ "# Hello, World!"; ""; "This is some text!" ])
 
         let expected =
             [ BlockToken.Header "# Hello, World!"
@@ -138,13 +113,7 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse 2 paragraph with double empty line``() =
 
-        let input =
-            Input.Create(
-                [ "Paragraph 1."
-                  ""
-                  ""
-                  "Paragraph 2." ]
-            )
+        let input = Input.Create([ "Paragraph 1."; ""; ""; "Paragraph 2." ])
 
         let expected =
             [ BlockToken.Paragraph "Paragraph 1."
@@ -158,8 +127,7 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse 2 unordered list items``() =
 
-        let input =
-            Input.Create([ "* Item 1."; "* Item 2." ])
+        let input = Input.Create([ "* Item 1."; "* Item 2." ])
 
         let expected =
             [ BlockToken.UnorderedListItem "Item 1."
@@ -173,12 +141,10 @@ type BlockParsing() =
     [<TestMethod>]
     member this.``Parse 2 ordered list items``() =
 
-        let input =
-            Input.Create([ "1. Item 1."; "2. Item 2." ])
+        let input = Input.Create([ "1. Item 1."; "2. Item 2." ])
 
         let expected =
-            [ BlockToken.OrderListItem "Item 1."
-              BlockToken.OrderListItem "Item 2." ]
+            [ BlockToken.OrderListItem "Item 1."; BlockToken.OrderListItem "Item 2." ]
 
         let actual = parseBlocks input
 
@@ -197,6 +163,42 @@ type BlockParsing() =
 
         Assert.AreEqual(expected, actual)
 
+    [<TestMethod>]
+    member this.``Parse headers only table (1 line)``() =
+
+        let input = [ "|col1|col2|" ] |> Input.Create
+
+        let expected = [ BlockToken.Table "|col1|col2|" ]
+
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]
+    member this.``Parse headers only table (2 lines)``() =
+
+        let input = [ "|col1|col2|"; "|----|----|" ] |> Input.Create
+
+        let expected = [ BlockToken.Table "|col1|col2|"; BlockToken.Table "|----|----|" ]
+
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+
+
+    [<TestMethod>]
+    member this.``Parse table``() =
+
+        let input = [ "|col1|col2|"; "|----|----|"; "|val1|val2|" ] |> Input.Create
+
+        let expected =
+            [ BlockToken.Table "|col1|col2|"
+              BlockToken.Table "|----|----|"
+              BlockToken.Table "|val1|val2|" ]
+
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
 
 [<TestClass>]
 type InlineParsing() =
@@ -213,8 +215,7 @@ type InlineParsing() =
                     Style = DOM.Style.Ref [ "b" ] }
               DOM.InlineContent.Text { Content = "!" } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
@@ -230,8 +231,7 @@ type InlineParsing() =
                     Style = DOM.Style.Ref [ "i" ] }
               DOM.InlineContent.Text { Content = "!" } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
@@ -248,8 +248,7 @@ type InlineParsing() =
                     Style = DOM.Style.Ref [ "b"; "i" ] }
               DOM.InlineContent.Text { Content = "!" } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
@@ -265,16 +264,14 @@ type InlineParsing() =
                     Style = DOM.Style.Ref [ "code" ] }
               DOM.InlineContent.Text { Content = "!" } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
     [<TestMethod>]
     member _.``Parse paragraph with link``() =
 
-        let input =
-            "This is a [link](https://www.example.com), hopefully it works!"
+        let input = "This is a [link](https://www.example.com), hopefully it works!"
 
         let expected =
             [ DOM.InlineContent.Text { Content = "This is a " }
@@ -284,8 +281,7 @@ type InlineParsing() =
                     Style = DOM.Style.Default }
               DOM.InlineContent.Text { Content = ", hopefully it works!" } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
@@ -295,11 +291,9 @@ type InlineParsing() =
 
         let input = "hello_world"
 
-        let expected =
-            [ DOM.InlineContent.Text { Content = "hello_world" } ]
+        let expected = [ DOM.InlineContent.Text { Content = "hello_world" } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
@@ -314,12 +308,11 @@ type InlineParsing() =
                   { Content = "hello_world"
                     Style = DOM.Style.Ref [ "b"; "i" ] } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
-    
+
     /// <summary>Test for fix to issues #8 and #4</summary>
     [<TestMethod>]
     member _.``Parse inline span content to line end with b and i``() =
@@ -331,12 +324,11 @@ type InlineParsing() =
                   { Content = "hello world"
                     Style = DOM.Style.Ref [ "b"; "i" ] } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
-        
-    
+
+
     /// <summary>Test for fix to issues #8 and #4</summary>
     [<TestMethod>]
     member _.``Parse inline span content to line end with b``() =
@@ -348,12 +340,11 @@ type InlineParsing() =
                   { Content = "hello world"
                     Style = DOM.Style.Ref [ "b" ] } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
-        
-     /// <summary>Test for fix to issues #8 and #4</summary>
+
+    /// <summary>Test for fix to issues #8 and #4</summary>
     [<TestMethod>]
     member _.``Parse inline span content to line end with i``() =
 
@@ -364,8 +355,7 @@ type InlineParsing() =
                   { Content = "hello world"
                     Style = DOM.Style.Ref [ "i" ] } ]
 
-        let actual =
-            InlineParser.parseInlineContent input
+        let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
 
@@ -375,8 +365,7 @@ type Processing() =
 
     [<TestMethod>]
     member _.``Create image block``() =
-        let input =
-            "![altText](url \"Image title\"){ height:30px,width:40px }"
+        let input = "![altText](url \"Image title\"){ height:30px,width:40px }"
 
         let expected =
             DOM.BlockContent.Image
@@ -387,15 +376,13 @@ type Processing() =
                   Height = Some "30px"
                   Width = Some "40px" }
 
-        let actual =
-            Processing.createImageBlock input
+        let actual = Processing.createImageBlock input
 
         Assert.AreEqual(expected, actual)
 
     [<TestMethod>]
     member _.``Create image block no meta``() =
-        let input =
-            "![altText](url \"Image title\")"
+        let input = "![altText](url \"Image title\")"
 
         let expected =
             DOM.BlockContent.Image
@@ -406,15 +393,13 @@ type Processing() =
                   Height = None
                   Width = None }
 
-        let actual =
-            Processing.createImageBlock input
+        let actual = Processing.createImageBlock input
 
         Assert.AreEqual(expected, actual)
 
     [<TestMethod>]
     member _.``Create image block just height meta``() =
-        let input =
-            "![altText](url \"Image title\"){ height:30px }"
+        let input = "![altText](url \"Image title\"){ height:30px }"
 
         let expected =
             DOM.BlockContent.Image
@@ -425,7 +410,36 @@ type Processing() =
                   Height = Some "30px"
                   Width = None }
 
-        let actual =
-            Processing.createImageBlock input
+        let actual = Processing.createImageBlock input
+
+        Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]
+    member _.``Create basic table``() =
+        let lines = [ "|col1|col2|col3|"; "|----|----|----|"; "|val1|val2|val3|" ]
+
+        let expected =
+            DOM.BlockContent.Table
+                { Columns =
+                    [ { Index = 0
+                        Content = [ DOM.InlineContent.Text { Content = "col1" } ]
+                        Alignment = DOM.TableColumnAlignment.Left }
+                      { Index = 1
+                        Content = [ DOM.InlineContent.Text { Content = "col2" } ]
+                        Alignment = DOM.TableColumnAlignment.Left }
+                      { Index = 2
+                        Content = [ DOM.InlineContent.Text { Content = "col3" } ]
+                        Alignment = DOM.TableColumnAlignment.Left } ]
+                  Rows =
+                    [ { Cells =
+                          [ { ColumnIndex = 0
+                              Content = [ DOM.InlineContent.Text { Content = "val1" } ] }
+                            { ColumnIndex = 1
+                              Content = [ DOM.InlineContent.Text { Content = "val2" } ] }
+                            { ColumnIndex = 2
+                              Content = [ DOM.InlineContent.Text { Content = "val3" } ] } ] } ] }
+
+
+        let actual = Processing.createTable lines
 
         Assert.AreEqual(expected, actual)

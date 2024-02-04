@@ -478,8 +478,12 @@ module Processing =
             | true -> l.Remove(l.Length - 1, 1).Remove(0, 1)
             | false -> l.Remove(0, 1)
 
-        let splitLine (l: string) = l.Split('|')
+        let splitLine (l: string) =
+            // TODO handle delimited |'s, e.g. in backticks.
+            l.Split('|', StringSplitOptions.TrimEntries)
 
+        // TODO add check/handling for 2nd line containing ----
+        
         let createColumns (line1: string) (line2: string option) =
             line1
             |> cleanLine
