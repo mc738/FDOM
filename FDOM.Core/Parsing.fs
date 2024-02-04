@@ -504,13 +504,21 @@ module Processing =
                   Rows = [] }
         | _ ->
             let _, rows = values |> List.splitAt 2
-            
-            let createRow =
-                ()
-            
+
+            let createRow (line: string) =
+                ({ Cells =
+                    cleanLine line
+                    |> splitLine
+                    |> List.ofArray
+                    |> List.mapi (fun i c ->
+                        ({ ColumnIndex = i
+                           Content = InlineParser.parseInlineContent c }
+                        : DOM.TableCell)) }
+                : DOM.TableRow)
+
             DOM.BlockContent.Table
                 { Columns = createColumns values.[0] (Some values.[1])
-                  Rows = [] }
+                  Rows = rows |> List.map createRow }
 
     let rec collectOrderedListItems (collected: string list) (remaining: BlockParser.BlockToken list) =
         match remaining |> List.tryHead with
