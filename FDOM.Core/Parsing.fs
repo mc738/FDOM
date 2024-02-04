@@ -1,18 +1,9 @@
 module FDOM.Core.Parsing
 
 open System
-open System.ComponentModel
 open System.Runtime.Serialization
 open System.Text
-open System.Text.Encodings.Web
 open System.Text.RegularExpressions
-open System.Xml.Linq
-open FDOM.Core
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
-open FDOM.Core.Common
 open FDOM.Core.Common
 open FDOM.Core.Common.Formatting
 
@@ -115,7 +106,7 @@ module BlockParser =
         | None -> Error()
         | Some l when l.Type <> LineType.Text -> Error()
         | _ ->
-            let (lines, next) =
+            let lines, next =
                 input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
 
             Ok(BlockToken.Paragraph(formatter lines), next)
@@ -140,7 +131,7 @@ module BlockParser =
                     | false -> Some l
 
 
-            let (lines, next) =
+            let lines, next =
                 input.TryGetUntilTypeOrEnd(curr + 1, LineType.CodeBlockDelimited)
 
             // Special formatter to preserve line breaks.
@@ -163,13 +154,13 @@ module BlockParser =
             // TODO Refactor/clear up and make clear. Some voodoo going on.
             match input.TryGetLine(curr + 1) with
             | Some next_line when next_line.Type = LineType.Text ->
-                let (lines, next) =
+                let lines, next =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr + 1, LineType.Text)
 
                 Ok(BlockToken.OrderListItem(formatter (l :: lines)), next)
             | _ ->
-                let (lines, next) =
+                let lines, next =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
 
@@ -184,13 +175,13 @@ module BlockParser =
             // TODO Refactor/clear up and make clear. Some voodoo going on.
             match input.TryGetLine(curr + 1) with
             | Some next_line when next_line.Type = LineType.Text ->
-                let (lines, next) =
+                let lines, next =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr + 1, LineType.Text)
 
                 Ok(BlockToken.UnorderedListItem(formatter (l :: lines)), next)
             | _ ->
-                let (lines, next) =
+                let lines, next =
                     // Look from next line on. we already know this line will be a list item
                     input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
 
@@ -280,13 +271,13 @@ module InlineParser =
     /// Read from a index until a specified character.
     /// This returns the sub string and either index of the character of the next index alone if `inclusive is set to true`.
     let readUntilChar input character inclusive from =
-        let rec handler (i) =
+        let rec handler i =
             match getChar input i with
             | Some c when c = character -> i
             | Some _ -> handler (i + 1)
             | None -> input.Length
 
-        let endIndex = handler (from)
+        let endIndex = handler from
 
         (input.[from .. (endIndex - 1)],
          if inclusive then
@@ -295,13 +286,13 @@ module InlineParser =
              endIndex)
 
     let readUntilCtrlChar input from =
-        let rec handler (i) =
+        let rec handler i =
             match getChar input i with
             | Some c when isControlChar c -> i
             | Some _ -> handler (i + 1)
             | None -> input.Length
 
-        let endIndex = handler (from)
+        let endIndex = handler from
 
         (input.[from .. (endIndex - 1)], endIndex)
 
@@ -310,7 +301,7 @@ module InlineParser =
     let readUntilString input (pattern: string) inclusive from =
         let peek = compareLookAhead input pattern
 
-        let rec handler (i) =
+        let rec handler i =
             match inBounds input (pattern.Length + i) with
             | true ->
                 match peek i with
@@ -338,7 +329,7 @@ module InlineParser =
             match getChar input i with
             | Some c ->
                 //
-                let (newState, next) =
+                let newState, next =
                     match c with
                     | '*' ->
                         // Fix for issue #4 - if `next` is the end of input, remove `len` from the end of `str`
@@ -350,11 +341,11 @@ module InlineParser =
                             else
                                 str, next
 
-                        let ((sub, next), classes) =
+                        let (sub, next), classes =
                             match lookAhead input i 1, lookAhead input i 2 with
-                            | Some (c1), Some (c2) when c1 = '*' && c2 = '*' ->
+                            | Some c1, Some c2 when c1 = '*' && c2 = '*' ->
                                 readUntilString input "***" true i |> trimEnd 3, [ "b"; "i" ]
-                            | Some (c1), _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ "b" ]
+                            | Some c1, _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ "b" ]
                             | _ -> readUntilChar input '*' true (i + 1), [ "i" ]
 
                         let content =
@@ -364,7 +355,7 @@ module InlineParser =
 
                         (state @ [ content ], next)
                     | '`' ->
-                        let (sub, next) =
+                        let sub, next =
                             readUntilChar input '`' true (i + 1)
                         // Make this a span
                         let content =
@@ -374,10 +365,10 @@ module InlineParser =
 
                         (state @ [ content ], next)
                     | '[' ->
-                        let (text, next) =
+                        let text, next =
                             readUntilChar input ']' true (i + 1)
 
-                        let (url, next) =
+                        let url, next =
                             readUntilChar input ')' true (next + 1)
 
                         let content =
@@ -390,7 +381,7 @@ module InlineParser =
                     | '_' ->
                         // To fix issue #8 and #9
                         // Read until next control character and append to prev?
-                        let (sub, next) =
+                        let sub, next =
                             readUntilCtrlChar input (i + 1)
 
                         // Get last item from state and append "_" + sub to it.
@@ -410,7 +401,7 @@ module InlineParser =
                          |> List.tail
                          |> fun t -> newIc :: t |> List.rev, next)
                     | _ ->
-                        let (sub, next) = readUntilCtrlChar input i
+                        let sub, next = readUntilCtrlChar input i
 
                         let content =
                             DOM.InlineContent.Text { Content = sub }
@@ -439,7 +430,7 @@ module Processing =
         (hType, str.Substring(hType + 1))
 
     let createHeaderContent (value: string) =
-        let (hType, content) = getHeaderType value
+        let hType, content = getHeaderType value
 
         match hType with
         | 1 -> h1 true Style.none (InlineParser.parseInlineContent content)
@@ -458,7 +449,7 @@ module Processing =
             (Style.references [ lang
                                 |> Option.map (fun l -> $"language-{l}")
                                 |> Option.defaultValue "" ])
-            ([ DOM.InlineContent.Text { Content = value } ])
+            [ DOM.InlineContent.Text { Content = value } ]
 
 
     let createImageBlock (value: string) =
@@ -526,18 +517,18 @@ module Processing =
             match remainingBlocks.IsEmpty with
             | true -> processedBlocks
             | false ->
-                let (newBlock, newRemainingBlocks) =
+                let newBlock, newRemainingBlocks =
                     match remainingBlocks.Head with
                     | BlockParser.BlockToken.Header h -> (createHeaderContent h, remainingBlocks.Tail)
                     | BlockParser.BlockToken.Paragraph p -> (createParagraphContent p, remainingBlocks.Tail)
                     | BlockParser.BlockToken.CodeBlock (lang, c) -> (createCodeBlock lang c, remainingBlocks.Tail)
                     | BlockParser.BlockToken.OrderListItem _ ->
-                        let (collected, remaining) =
+                        let collected, remaining =
                             collectOrderedListItems [] remainingBlocks
 
                         (createOrderedListItems collected, remaining)
                     | BlockParser.BlockToken.UnorderedListItem _ ->
-                        let (collected, remaining) =
+                        let collected, remaining =
                             collectUnorderedListItems [] remainingBlocks
 
                         (createUnorderedListItem collected, remaining)
@@ -571,7 +562,7 @@ type Parser(blocks: BlockParser.BlockToken list) =
                     | None -> acc, remaining
                 | false, false -> acc, line :: remaining
 
-            let (rawMetadata, remaining) =
+            let rawMetadata, remaining =
                 extract ([], lines.Head, lines.Tail)
 
             let metadata =
@@ -614,7 +605,7 @@ type Parser(blocks: BlockParser.BlockToken list) =
                 | false, false -> acc, remaining
             | None -> acc, remaining
 
-        let (rawMetadata, remaining) =
+        let rawMetadata, remaining =
             extract ([], lines)
 
         let input =
