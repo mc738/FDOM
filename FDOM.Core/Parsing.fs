@@ -469,9 +469,48 @@ module Processing =
 
     let createUnorderedListItem (values: string list) =
         ul Style.none (values |> List.map createListItem)
-        
+
     let createTable (values: string list) =
-        DOM.BlockContent.Table { Columns = []; Rows = [] }
+
+        // Clean up the line to remove leading and possible trailing '|' characters.
+        let cleanLine (l: string) =
+            match l.EndsWith('|') with
+            | true -> l.Remove(l.Length - 1, 1).Remove(0, 1)
+            | false -> l.Remove(0, 1)
+
+        let splitLine (l: string) = l.Split('|')
+
+        let createColumns (line1: string) (line2: string option) =
+            line1
+            |> cleanLine
+            |> splitLine
+            |> List.ofArray
+            |> List.mapi (fun i l ->
+                ({ Content = InlineParser.parseInlineContent l
+                   Alignment = DOM.TableColumnAlignment.Left // TODO handle
+                   Index = i }
+                : DOM.TableColumn))
+
+        // First check if the table has at least 2 lines
+        match values.Length with
+        | 0 -> DOM.BlockContent.Table { Columns = []; Rows = [] }
+        | 1 ->
+            DOM.BlockContent.Table
+                { Columns = createColumns values.[0] None
+                  Rows = [] }
+        | 2 ->
+            DOM.BlockContent.Table
+                { Columns = createColumns values.[0] (Some values.[1])
+                  Rows = [] }
+        | _ ->
+            let _, rows = values |> List.splitAt 2
+            
+            let createRow =
+                ()
+            
+            DOM.BlockContent.Table
+                { Columns = createColumns values.[0] (Some values.[1])
+                  Rows = [] }
 
     let rec collectOrderedListItems (collected: string list) (remaining: BlockParser.BlockToken list) =
         match remaining |> List.tryHead with
