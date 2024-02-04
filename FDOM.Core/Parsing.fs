@@ -27,6 +27,7 @@ module BlockParser =
         | UnorderedListItem
         | CodeBlockDelimited
         | Image
+        | Table
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -48,6 +49,7 @@ module BlockParser =
             ->
             LineType.OrderedListItem // A bit of a hack to look for ordered lists. This can be cleaned up!
         | _ when line.[0] = '!' -> LineType.Image
+        | _ when line.[0] = '|' -> LineType.Table
         | _ -> LineType.Text
 
     [<RequireQualifiedAccess>]
