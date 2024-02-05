@@ -8,7 +8,7 @@ open Fluff.Core
 
 type Layout = { Head: string; Foot: string }
 
-let private join separator (values: string seq) = System.String.Join(separator, values)
+let private join separator (values: string seq) = String.Join(separator, values)
 
 /// Infix join.
 /// Example:
@@ -29,7 +29,7 @@ module private Utils =
         | DOM.Style.Custom map ->
             map
             |> Map.toSeq
-            |> Seq.map (fun (k, v) -> sprintf "%s: %s;" k v)
+            |> Seq.map (fun (k, v) -> $"{k}: {v};")
             |> join " "
             |> sprintf " style=\"%s\"" // Note -> this takes care of the leading space.
         | DOM.Style.Default -> ""
@@ -40,7 +40,7 @@ module private Inline =
         text.Content |> HtmlEncoder.Default.Encode
 
     let renderSpan (span: DOM.InlineSpan) =
-        sprintf "<span%s>%s</span>" (renderStyle span.Style) span.Content
+        $"<span{renderStyle span.Style}>{span.Content}</span>"
 
     let renderLink (link: DOM.InlineLink) =
         $"""<a href="{link.Url}">{link.Content}</a>"""
@@ -96,17 +96,17 @@ module private Blocks =
         match header.Indexed with
         | true ->
             $"<{tag} id=\"{renderInlineItemsText header.Content |> slugify}\"{renderStyle header.Style}>{renderInlineItems header.Content}</{tag}>"
-        | false -> sprintf "<%s%s>%s</%s>" tag (renderStyle header.Style) (renderInlineItems header.Content) tag
+        | false -> $"<{tag}{renderStyle header.Style}>{renderInlineItems header.Content}</{tag}>"
 
     let renderParagraph (paragraph: DOM.ParagraphBlock) =
-        sprintf "<p%s>%s</p>" (renderStyle paragraph.Style) (renderInlineItems paragraph.Content)
+        $"<p{renderStyle paragraph.Style}>{renderInlineItems paragraph.Content}</p>"
 
     let renderCode (code: DOM.CodeBlock) =
         $"<pre{renderStyle code.Style}><code>{renderInlineItems code.Content}</code></pre>"
 
     let renderListItem (item: DOM.ListItem) =
 
-        sprintf "<li%s>%s</li>" (renderStyle item.Style) (renderInlineItems item.Content)
+        $"<li{renderStyle item.Style}>{renderInlineItems item.Content}</li>"
 
     let renderList (list: DOM.ListBlock) =
 
@@ -118,7 +118,7 @@ module private Blocks =
         let content =
             (list.Items |> List.map renderListItem) +> ""
 
-        sprintf "<%s%s>%s</%s>" tag (renderStyle list.Style) content tag
+        $"<{tag}{renderStyle list.Style}>{content}</{tag}>"
 
     let renderImage (img: DOM.ImageBlock) =
         let height =
@@ -149,18 +149,15 @@ module private Blocks =
 module private BoilerPlate =
 
     let renderHead title linksTags =
-        sprintf
-            """<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>%s</title>%s</head><body>"""
-            title
-            linksTags
+        $"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{title}</title>{linksTags}</head><body>"""
 
     let renderFoot scriptTags =
-        sprintf """%s</body></html>""" scriptTags
+        $"""{scriptTags}</body></html>"""
 
 [<AutoOpen>]
 module private Document =
     let renderSection (section: DOM.Section) =
-        sprintf """<section%s>%s</section>""" (renderStyle section.Style) (renderBlocks section.Content)
+        $"""<section{renderStyle section.Style}>{renderBlocks section.Content}</section>"""
 
     let renderBody layout content =
         [ layout.Head
@@ -171,10 +168,10 @@ module private Document =
         +> ""
 
     let renderStylesheetReference reference =
-        sprintf """<link href="%s" rel="stylesheet">""" reference
+        $"""<link href="{reference}" rel="stylesheet">"""
 
     let renderScriptReference reference =
-        sprintf """<script src="%s"></script>""" reference
+        $"""<script src="{reference}"></script>"""
 
 let getIndexes (document: DOM.Document) =
     document.GetIndexes(renderInlineItemsText)
