@@ -51,7 +51,6 @@ module private Blocks =
     
     let renderListItem (item: DOM.ListItem) = Elements.p (renderInlineItems item.Content) // TODO handle list items
 
-
     let renderList (list: DOM.ListBlock) =
 
         let tag =
