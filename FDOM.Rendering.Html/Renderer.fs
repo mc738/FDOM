@@ -8,7 +8,6 @@ open Fluff.Core
 
 type Layout = { Head: string; Foot: string }
 
-// TODO move to FUtils
 let private join separator (values: string seq) = System.String.Join(separator, values)
 
 /// Infix join.
