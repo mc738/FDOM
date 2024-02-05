@@ -420,23 +420,31 @@ type Processing() =
 
         let expected =
             DOM.BlockContent.Table
-                { Columns =
-                    [ { Index = 0
+                { Style = DOM.Style.Default
+                  Columns =
+                    [ { Style = DOM.Style.Default
+                        Index = 0
                         Content = [ DOM.InlineContent.Text { Content = "col1" } ]
                         Alignment = DOM.TableColumnAlignment.Left }
-                      { Index = 1
+                      { Style = DOM.Style.Default
+                        Index = 1
                         Content = [ DOM.InlineContent.Text { Content = "col2" } ]
                         Alignment = DOM.TableColumnAlignment.Left }
-                      { Index = 2
+                      { Style = DOM.Style.Default
+                        Index = 2
                         Content = [ DOM.InlineContent.Text { Content = "col3" } ]
                         Alignment = DOM.TableColumnAlignment.Left } ]
                   Rows =
-                    [ { Cells =
-                          [ { ColumnIndex = 0
+                    [ { Style = DOM.Style.Default
+                        Cells =
+                          [ { Style = DOM.Style.Default
+                              ColumnIndex = 0
                               Content = [ DOM.InlineContent.Text { Content = "val1" } ] }
-                            { ColumnIndex = 1
+                            { Style = DOM.Style.Default
+                              ColumnIndex = 1
                               Content = [ DOM.InlineContent.Text { Content = "val2" } ] }
-                            { ColumnIndex = 2
+                            { Style = DOM.Style.Default
+                              ColumnIndex = 2
                               Content = [ DOM.InlineContent.Text { Content = "val3" } ] } ] } ] }
 
 
