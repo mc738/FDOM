@@ -65,11 +65,13 @@ module DOM =
           Style: Style }
 
     and TableBlock =
-        { Columns: TableColumn list
+        { Style: Style
+          Columns: TableColumn list
           Rows: TableRow list }
 
     and TableColumn =
-        { Content: InlineContent list
+        { Style: Style
+          Content: InlineContent list
           Alignment: TableColumnAlignment
           Index: int }
 
@@ -78,10 +80,11 @@ module DOM =
         | Right
         | Center
 
-    and TableRow = { Cells: TableCell list }
+    and TableRow = { Style: Style; Cells: TableCell list }
 
     and TableCell =
-        { ColumnIndex: int
+        { Style: Style
+          ColumnIndex: int
           Content: InlineContent list }
 
     and BlockContent =
