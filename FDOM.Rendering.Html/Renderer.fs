@@ -133,6 +133,11 @@ module private Blocks =
 
         $"""<img src="{img.Source}" alt="{img.AltText}" title="{img.Title}"{height}{width}{renderStyle img.Style}>"""
 
+    let renderTable (table: DOM.TableBlock) =
+        
+        
+        $"<table><thead></thead><tbody></tbody></table>"
+    
     let renderBlock block =
         match block with
         | DOM.BlockContent.Header h -> renderHeader h
@@ -140,6 +145,7 @@ module private Blocks =
         | DOM.BlockContent.Code c -> renderCode c
         | DOM.BlockContent.List l -> renderList l
         | DOM.BlockContent.Image i -> renderImage i
+        | DOM.BlockContent.Table t -> renderTable t
 
     let renderBlocks blocks = (blocks |> List.map renderBlock) +> ""
 
