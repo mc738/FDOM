@@ -21,11 +21,7 @@ module private Utils =
     let renderStyle style =
 
         match style with
-        | DOM.Style.Ref r ->
-            r
-            |> Seq.ofList
-            |> join " "
-            |> sprintf " class=\"%s\"" // Note -> this takes care of the leading space.
+        | DOM.Style.Ref r -> r |> Seq.ofList |> join " " |> sprintf " class=\"%s\"" // Note -> this takes care of the leading space.
         | DOM.Style.Custom map ->
             map
             |> Map.toSeq
@@ -81,9 +77,7 @@ module private Inline =
         |> fun c -> String.Join("", c)
 
     let renderInlineItemsText (items: DOM.InlineContent list) =
-        items
-        |> List.map renderInlineItemText
-        |> String.concat ""
+        items |> List.map renderInlineItemText |> String.concat ""
 
 [<AutoOpen>]
 module private Blocks =
@@ -119,31 +113,39 @@ module private Blocks =
             | true -> "ol"
             | false -> "ul"
 
-        let content =
-            (list.Items |> List.map renderListItem) +> ""
+        let content = (list.Items |> List.map renderListItem) +> ""
 
         $"<{tag}{renderStyle list.Style}>{content}</{tag}>"
 
     let renderImage (img: DOM.ImageBlock) =
         let height =
-            img.Height
-            |> Option.map (fun h -> $" height=\"{h}\"")
-            |> Option.defaultValue ""
+            img.Height |> Option.map (fun h -> $" height=\"{h}\"") |> Option.defaultValue ""
 
         let width =
-            img.Width
-            |> Option.map (fun w -> $" width=\"{w}\"")
-            |> Option.defaultValue ""
+            img.Width |> Option.map (fun w -> $" width=\"{w}\"") |> Option.defaultValue ""
 
         $"""<img src="{img.Source}" alt="{img.AltText}" title="{img.Title}"{height}{width}{renderStyle img.Style}>"""
 
     let renderTable (table: DOM.TableBlock) =
         let header =
             table.Columns
-            |> List.m
-        
-        $"<table{renderStyle table.Style}><thead></thead><tbody></tbody></table>"
-    
+            |> List.map (fun c ->
+                // TODO handle alignment
+                $"<th{renderStyle c.Style}>{renderInlineItems c.Content}</th>")
+            |> String.concat ""
+
+        let rows =
+            table.Rows
+            |> List.collect (fun r ->
+                [ $"<tr{renderStyle r.Style}>"
+                  yield!
+                      r.Cells
+                      |> List.map (fun c -> $"<td{renderStyle r.Style}>{renderInlineItems c.Content}</td>")
+                  "</tr>" ])
+            |> String.concat ""
+
+        $"<table{renderStyle table.Style}><tr>{header}</tr><thead></thead><tbody>{rows}</tbody></table>"
+
     let renderBlock block =
         match block with
         | DOM.BlockContent.Header h -> renderHeader h
@@ -163,8 +165,7 @@ module private BoilerPlate =
     let renderHead title linksTags =
         $"""<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>{title}</title>{linksTags}</head><body>"""
 
-    let renderFoot scriptTags =
-        $"""{scriptTags}</body></html>"""
+    let renderFoot scriptTags = $"""{scriptTags}</body></html>"""
 
 [<AutoOpen>]
 module private Document =
@@ -192,13 +193,9 @@ let renderInlineItems (items: DOM.InlineContent list) = Inline.renderInlineItems
 
 let render (layout: Layout) (stylesheets: string list) (scriptSources: string list) (document: DOM.Document) =
 
-    let links =
-        (stylesheets |> List.map renderStylesheetReference)
-        +> ""
+    let links = (stylesheets |> List.map renderStylesheetReference) +> ""
 
-    let scripts =
-        (scriptSources |> List.map renderScriptReference)
-        +> ""
+    let scripts = (scriptSources |> List.map renderScriptReference) +> ""
 
     [ renderHead document.Name links
       renderBody layout document.Sections
@@ -212,19 +209,12 @@ let renderFromParsedTemplate
     (scriptSources: string list)
     (document: DOM.Document)
     =
-    let links =
-        (stylesheets |> List.map renderStylesheetReference)
-        +> ""
+    let links = (stylesheets |> List.map renderStylesheetReference) +> ""
 
-    let scripts =
-        (scriptSources |> List.map renderScriptReference)
-        +> ""
+    let scripts = (scriptSources |> List.map renderScriptReference) +> ""
 
     let renderArticle content =
-        [ "<article>"
-          (content |> List.map renderSection) +> ""
-          "</article>" ]
-        +> ""
+        [ "<article>"; (content |> List.map renderSection) +> ""; "</article>" ] +> ""
 
     (*
     let indexes =
@@ -241,12 +231,7 @@ let renderFromParsedTemplate
 
     let data =
         { values with
-            Values =
-                values.Values.Add(
-                    "content",
-                    renderArticle document.Sections
-                    |> Mustache.Value.Scalar
-                ) }
+            Values = values.Values.Add("content", renderArticle document.Sections |> Mustache.Value.Scalar) }
 
     Mustache.replace data true template
 
@@ -262,10 +247,7 @@ let renderFromTemplate
 let renderFromBlocks (blocks: DOM.BlockContent list) = renderBlocks blocks
 
 let renderArticle (blocks: DOM.BlockContent list) =
-    [ "<article>"
-      renderBlocks blocks
-      "</article>" ]
-    +> ""
+    [ "<article>"; renderBlocks blocks; "</article>" ] +> ""
 
 let renderBlocksWithTemplate (template: Mustache.Token list) (data: Mustache.Data) (blocks: DOM.BlockContent list) =
     //let render =
@@ -274,7 +256,8 @@ let renderBlocksWithTemplate (template: Mustache.Token list) (data: Mustache.Dat
     //      "</article>" ]
     //    +> ""
 
-    { data with Values = data.Values.Add("content", Mustache.Scalar <| renderArticle blocks) }
+    { data with
+        Values = data.Values.Add("content", Mustache.Scalar <| renderArticle blocks) }
     |> fun d -> Mustache.replace d true template
 
 let renderTitle (title: DOM.HeaderBlock) = renderHeader title
