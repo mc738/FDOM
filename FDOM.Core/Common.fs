@@ -9,6 +9,7 @@ module DOM =
     type Style =
         | Ref of string list
         | Custom of Map<string, string>
+        | Combination of Classes: string list * Styles: Map<string, string>
         | Default
 
     // Blocks
