@@ -342,3 +342,16 @@ module Formatting =
 
         member formatters.Run(input) =
             formatters.Items |> List.fold (fun state f -> formatterHandler f state) input
+
+[<RequireQualifiedAccess>]
+module PredefinedStyleRefs =
+    
+    let bold = "b"
+    
+    let italics = "i"
+    
+    let underline = "ul"
+    
+    let code = "code"
+    
+    
