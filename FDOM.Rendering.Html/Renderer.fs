@@ -32,6 +32,10 @@ module private Utils =
             |> Seq.map (fun (k, v) -> $"{k}: {v};")
             |> join " "
             |> sprintf " style=\"%s\"" // Note -> this takes care of the leading space.
+        | DOM.Style.Combination(classes, styles) ->
+            let c = classes |> join " "
+            let s = styles |> Map.toList |> List.map (fun (k, v) -> $"{k}: {v}") |> join "; "
+            $" class=\"{c}\" style=\"{s}\""
         | DOM.Style.Default -> ""
 
 [<AutoOpen>]
@@ -134,9 +138,11 @@ module private Blocks =
         $"""<img src="{img.Source}" alt="{img.AltText}" title="{img.Title}"{height}{width}{renderStyle img.Style}>"""
 
     let renderTable (table: DOM.TableBlock) =
+        let header =
+            table.Columns
+            |> List.m
         
-        
-        $"<table><thead></thead><tbody></tbody></table>"
+        $"<table{renderStyle table.Style}><thead></thead><tbody></tbody></table>"
     
     let renderBlock block =
         match block with
