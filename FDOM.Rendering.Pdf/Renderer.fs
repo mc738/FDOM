@@ -29,17 +29,54 @@ module private Inline =
             | DOM.Custom stringMap -> None, Some stringMap
             | DOM.Combination(classes, styles) -> Some classes, Some styles
             | DOM.Default -> None, None
-        
-        
+
+        let isCode =
+            classes
+            |> Option.map (List.contains PredefinedStyleRefs.code)
+            |> Option.defaultValue false
+
         Elements.ParagraphElement.FormattedText(
-            { Bold = classes |> Option.map (fun c -> c |> List.contains "b")
+            { Bold = classes |> Option.map (fun c -> c |> List.contains PredefinedStyleRefs.bold)
               Color = failwith "todo"
-              Italic = classes |> Option.map (fun c -> c |> List.contains "b")
+              Italic = classes |> Option.map (fun c -> c |> List.contains PredefinedStyleRefs.italics)
               Size = None
               Subscript = None
               Superscript = None
-              Underline = classes |> Option.map (fun c -> c |> List.contains "ul")
-              Font = failwith "todo"
+              Underline =
+                classes
+                |> Option.bind (fun c ->
+                    // TODO make this configurable
+                    if c |> List.contains "ul" then
+                        Some Style.Underline.Single
+                    else
+                        None)
+              Font =
+                styles
+                |> Option.bind (fun s -> s.TryFind "font-family")
+                |> Option.map (fun f ->
+                    ({ Bold = None
+                       Color = None
+                       Italic = None
+                       Name = Some f
+                       Size = None
+                       Subscript = None
+                       Superscript = None
+                       Underline = None }
+                    : Style.Font))
+                |> Option.orElseWith (fun _ ->
+                    match isCode with
+                    | true ->
+                        ({ Bold = None
+                           Color = None
+                           Italic = None
+                           Name = Some "monospace" // TODO make this configurable
+                           Size = None
+                           Subscript = None
+                           Superscript = None
+                           Underline = None }
+                        : Style.Font)
+                        |> Some
+                    | false -> None)
               Style = failwith "todo"
               Elements = [ Elements.ParagraphElement.Text({ Content = span.Content }: Elements.Text) ] }
             : Elements.FormattedText
@@ -47,9 +84,9 @@ module private Inline =
     //span.Content // TODO add spans to FreDF
 
     let renderLink (span: DOM.InlineLink) =
-        
+
         ()
-    
+
     //let renderSpans (spans: DOM.InlineSpan list) = (spans |> List.map renderSpan) +> ""
 
     let renderInlineContent (content: DOM.InlineContent) =
