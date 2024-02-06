@@ -335,9 +335,9 @@ module InlineParser =
                         let (sub, next), classes =
                             match lookAhead input i 1, lookAhead input i 2 with
                             | Some c1, Some c2 when c1 = '*' && c2 = '*' ->
-                                readUntilString input "***" true i |> trimEnd 3, [ "b"; "i" ]
-                            | Some c1, _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ "b" ]
-                            | _ -> readUntilChar input '*' true (i + 1), [ "i" ]
+                                readUntilString input "***" true i |> trimEnd 3, [ PredefinedStyleRefs.bold; PredefinedStyleRefs.italics ]
+                            | Some c1, _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ PredefinedStyleRefs.bold ]
+                            | _ -> readUntilChar input '*' true (i + 1), [ PredefinedStyleRefs.italics ]
 
                         let content =
                             DOM.InlineContent.Span
@@ -351,7 +351,7 @@ module InlineParser =
                         let content =
                             DOM.InlineContent.Span
                                 { Content = sub
-                                  Style = DOM.Style.Ref [ "code" ] }
+                                  Style = DOM.Style.Ref [ PredefinedStyleRefs.code ] }
 
                         (state @ [ content ], next)
                     | '[' ->
@@ -490,38 +490,44 @@ module Processing =
             |> splitLine
             |> List.ofArray
             |> List.mapi (fun i l ->
-                ({ Content = InlineParser.parseInlineContent l
+                ({ Style = Style.none
+                   Content = InlineParser.parseInlineContent l
                    Alignment = DOM.TableColumnAlignment.Left // TODO handle
                    Index = i }
                 : DOM.TableColumn))
 
         // First check if the table has at least 2 lines
         match values.Length with
-        | 0 -> DOM.BlockContent.Table { Columns = []; Rows = [] }
+        | 0 -> DOM.BlockContent.Table { Style = Style.none; Columns = []; Rows = [] }
         | 1 ->
             DOM.BlockContent.Table
-                { Columns = createColumns values.[0] None
+                { Style = Style.none
+                  Columns = createColumns values.[0] None
                   Rows = [] }
         | 2 ->
             DOM.BlockContent.Table
-                { Columns = createColumns values.[0] (Some values.[1])
+                { Style = Style.none
+                  Columns = createColumns values.[0] (Some values.[1])
                   Rows = [] }
         | _ ->
             let _, rows = values |> List.splitAt 2
 
             let createRow (line: string) =
-                ({ Cells =
+                ({  Style = Style.none
+                    Cells =
                     cleanLine line
                     |> splitLine
                     |> List.ofArray
                     |> List.mapi (fun i c ->
-                        ({ ColumnIndex = i
+                        ({ Style = Style.none
+                           ColumnIndex = i
                            Content = InlineParser.parseInlineContent c }
                         : DOM.TableCell)) }
                 : DOM.TableRow)
 
             DOM.BlockContent.Table
-                { Columns = createColumns values.[0] (Some values.[1])
+                { Style = Style.none
+                  Columns = createColumns values.[0] (Some values.[1])
                   Rows = rows |> List.map createRow }
 
     let rec collectOrderedListItems (collected: string list) (remaining: BlockParser.BlockToken list) =
