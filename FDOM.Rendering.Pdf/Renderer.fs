@@ -18,9 +18,37 @@ let (+>) (items: string list) separator = join separator items
 
 [<AutoOpen>]
 module private Inline =
-    let renderText (text: DOM.InlineText) = text.Content
+    let renderText (text: DOM.InlineText) =
+        Elements.ParagraphElement.Text({ Content = text.Content }: Elements.Text)
 
-    let renderSpan (span: DOM.InlineSpan) = span.Content // TODO add spans to FreDF
+    let renderSpan (span: DOM.InlineSpan) =
+        // For not these will assume there is no predefined style (due to the various combinations
+        let classes, styles =
+            match span.Style with
+            | DOM.Ref l -> Some l, None
+            | DOM.Custom stringMap -> None, Some stringMap
+            | DOM.Combination(classes, styles) -> Some classes, Some styles
+            | DOM.Default -> None, None
+        
+        
+        Elements.ParagraphElement.FormattedText(
+            { Bold = classes |> Option.map (fun c -> c |> List.contains "b")
+              Color = failwith "todo"
+              Italic = classes |> Option.map (fun c -> c |> List.contains "b")
+              Size = None
+              Subscript = None
+              Superscript = None
+              Underline = classes |> Option.map (fun c -> c |> List.contains "ul")
+              Font = failwith "todo"
+              Style = failwith "todo"
+              Elements = [ Elements.ParagraphElement.Text({ Content = span.Content }: Elements.Text) ] }
+            : Elements.FormattedText
+        )
+    //span.Content // TODO add spans to FreDF
+
+    let renderLink (span: DOM.InlineLink) =
+        
+        ()
     
     //let renderSpans (spans: DOM.InlineSpan list) = (spans |> List.map renderSpan) +> ""
 
@@ -28,9 +56,9 @@ module private Inline =
         match content with
         | DOM.Text t -> renderText t
         | DOM.Span s -> renderSpan s
+        | DOM.Link inlineLink -> failwith "todo"
 
-    let renderInlineItems (items: DOM.InlineContent list) =
-        (items |> List.map renderInlineContent) +> ""
+    let renderInlineItems (items: DOM.InlineContent list) = (items |> List.map renderInlineContent) //+> ""
 
 
 [<AutoOpen>]
@@ -47,9 +75,11 @@ module private Blocks =
 
         tag (renderInlineItems header.Content)
 
-    let renderParagraph (paragraph: DOM.ParagraphBlock) = Elements.p (renderInlineItems paragraph.Content)
-    
-    let renderListItem (item: DOM.ListItem) = Elements.p (renderInlineItems item.Content) // TODO handle list items
+    let renderParagraph (paragraph: DOM.ParagraphBlock) =
+        Elements.p (renderInlineItems paragraph.Content)
+
+    let renderListItem (item: DOM.ListItem) =
+        Elements.p (renderInlineItems item.Content) // TODO handle list items
 
     let renderList (list: DOM.ListBlock) =
 
@@ -68,17 +98,21 @@ module private Blocks =
         | DOM.BlockContent.Paragraph p -> [ renderParagraph p ]
         | DOM.BlockContent.List l -> renderList l
         | DOM.BlockContent.Image i -> [ renderImage i ]
+        | DOM.Code codeBlock ->
+            //Elements.
 
-    let renderBlocks blocks = blocks |> List.map renderBlock |> List.concat
-    
+            failwith "todo"
+        | DOM.Table tableBlock -> failwith "todo"
+
+    let renderBlocks blocks =
+        blocks |> List.map renderBlock |> List.concat
+
 [<AutoOpen>]
 module private Document =
     let renderSection (section: DOM.Section) =
-        {
-            Portrait = true
-            Elements = (renderBlocks section.Content)
-        }
-        
+        { Portrait = true
+          Elements = (renderBlocks section.Content) }
+
     let renderBody content = content |> List.map renderSection
 
 let render (savePath: string) (stylePath: string) (document: DOM.Document) =
