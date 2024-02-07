@@ -13,7 +13,7 @@ type PdfRendererSettings =
       DefaultUnderLineType: Style.Underline
       DefaultHeader: Structure.HeaderFooter option
       DefaultFooter: Structure.HeaderFooter option
-      DefaultPageSetup: Structure.PageSetup
+      DefaultSectionPageSetup: Structure.PageSetup option
       H1Class: string
       H2Class: string
       H3Class: string
@@ -198,8 +198,8 @@ module private Blocks =
 [<AutoOpen>]
 module private Document =
 
-    let renderSection (settin) (section: DOM.Section) =
-        ({ PageSetup = None
+    let renderSection (settings: PdfRendererSettings) (section: DOM.Section) =
+        ({ PageSetup = settings.DefaultSectionPageSetup
            Headers = failwith "todo"
            Footers = failwith "todo"
            Elements = renderBlocks section.Content }
