@@ -3,6 +3,7 @@ module FDOM.Rendering.Pdf
 
 open FDOM.Core.Common
 open FreDF.Core
+open MigraDocCore.DocumentObjectModel
 
 
 type Layout = { Head: string; Foot: string }
@@ -10,6 +11,9 @@ type Layout = { Head: string; Foot: string }
 type PdfRendererSettings =
     { StylePath: string
       DefaultUnderLineType: Style.Underline
+      DefaultHeader: Structure.HeaderFooter option
+      DefaultFooter: Structure.HeaderFooter option
+      DefaultPageSetup: Structure.PageSetup
       H1Class: string
       H2Class: string
       H3Class: string
@@ -20,6 +24,7 @@ type PdfRendererSettings =
     static member Default() =
         { StylePath = ""
           DefaultUnderLineType = Style.Underline.Single
+          DefaultHeader = 
           H1Class = "Header1"
           H2Class = "Header2"
           H3Class = "Header3"
@@ -193,7 +198,7 @@ module private Blocks =
 [<AutoOpen>]
 module private Document =
 
-    let renderSection (section: DOM.Section) =
+    let renderSection (settin) (section: DOM.Section) =
         ({ PageSetup = None
            Headers = failwith "todo"
            Footers = failwith "todo"
