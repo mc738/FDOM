@@ -8,14 +8,24 @@ open FreDF.Core
 type Layout = { Head: string; Foot: string }
 
 type PdfRendererSettings =
-    {
-        DefaultUnderLineType: Style.Underline
-    }
-    
+    { StylePath: string
+      DefaultUnderLineType: Style.Underline
+      H1Class: string
+      H2Class: string
+      H3Class: string
+      H4Class: string
+      H5Class: string
+      H6Class: string }
+
     static member Default() =
-        {
-            DefaultUnderLineType = Style.Underline.Single 
-        }
+        { StylePath = ""
+          DefaultUnderLineType = Style.Underline.Single
+          H1Class = "Header1"
+          H2Class = "Header2"
+          H3Class = "Header3"
+          H4Class = "Header4"
+          H5Class = "Header5"
+          H6Class = "Header6" }
 
 
 // TODO move to FUtils
@@ -169,15 +179,28 @@ module private Blocks =
 
     let renderBlocks blocks =
         blocks |> List.map renderBlock |> List.concat
-        
-    
+
+
+    let elementBuilder (elements: Elements.DocumentElement list) (section: MigraDocCore.DocumentObjectModel.Section) =
+        ({ PageSetup = None
+           Headers = failwith "todo"
+           Footers = failwith "todo"
+           Elements = elements }
+        : Structure.Section)
+            .ToDocObj()
 
 
 [<AutoOpen>]
 module private Document =
+
     let renderSection (section: DOM.Section) =
-        { Portrait = true
-          Elements = (renderBlocks section.Content) }
+        ({ PageSetup = None
+           Headers = failwith "todo"
+           Footers = failwith "todo"
+           Elements = renderBlocks section.Content }
+        : Structure.Section)
+            .ToDocObj()
+
 
     let renderBody content = content |> List.map renderSection
 
