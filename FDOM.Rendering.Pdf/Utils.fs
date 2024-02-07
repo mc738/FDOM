@@ -1,8 +1,9 @@
-﻿namespace FDOM.Rendering.Pdf
+﻿namespace FDOM.Rendering
 
 open FDOM.Core.Common
 open FreDF.Core
 
+[<AutoOpen>]
 module Utils =
 
     let deserializeColor (value: string) =
