@@ -11,8 +11,8 @@ type Layout = { Head: string; Foot: string }
 type PdfRendererSettings =
     { StylePath: string
       DefaultUnderLineType: Style.Underline
-      DefaultHeader: Structure.HeaderFooter option
-      DefaultFooter: Structure.HeaderFooter option
+      DefaultSectionHeader: Structure.HeaderFooter option
+      DefaultSectionFooter: Structure.HeaderFooter option
       DefaultSectionPageSetup: Structure.PageSetup option
       H1Class: string
       H2Class: string
