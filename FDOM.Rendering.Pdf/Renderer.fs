@@ -7,6 +7,17 @@ open FreDF.Core
 
 type Layout = { Head: string; Foot: string }
 
+type PdfRendererSettings =
+    {
+        DefaultUnderLineType: Style.Underline
+    }
+    
+    static member Default() =
+        {
+            DefaultUnderLineType = Style.Underline.Single 
+        }
+
+
 // TODO move to FUtils
 let private join separator (values: string seq) = System.String.Join(separator, values)
 
@@ -37,7 +48,7 @@ module private Inline =
 
         Elements.ParagraphElement.FormattedText(
             { Bold = classes |> Option.map (fun c -> c |> List.contains PredefinedStyleRefs.bold)
-              Color = failwith "todo"
+              Color = styles |> Option.bind (Map.tryFind "color") |> Option.map deserializeColor
               Italic = classes |> Option.map (fun c -> c |> List.contains PredefinedStyleRefs.italics)
               Size = None
               Subscript = None
@@ -113,7 +124,11 @@ module private Blocks =
         tag (renderInlineItems header.Content)
 
     let renderParagraph (paragraph: DOM.ParagraphBlock) =
-        Elements.p (renderInlineItems paragraph.Content)
+        ({ Elements = renderInlineItems paragraph.Content
+           Format = None
+           Style = None }
+        : Elements.Paragraph)
+        |> Elements.DocumentElement.Paragraph
 
     let renderListItem (item: DOM.ListItem) =
         Elements.p (renderInlineItems item.Content) // TODO handle list items
@@ -127,7 +142,18 @@ module private Blocks =
 
         (list.Items |> List.map renderListItem)
 
-    let renderImage (image: DOM.ImageBlock) = Elements.img "" "" true //  "Not implemented" // TODO Implement this!
+    let renderImage (image: DOM.ImageBlock) =
+        ({ Source = image.Source
+           Height = failwith "todo"
+           Width = failwith "todo"
+           Left = failwith "todo"
+           Top = failwith "todo"
+           Resolution = failwith "todo"
+           ScaleHeight = failwith "todo"
+           ScaleWidth = failwith "todo"
+           LockAspectRatio = failwith "todo" }
+        : Elements.Image)
+        |> Elements.DocumentElement.Image
 
     let renderBlock block =
         match block with
@@ -143,6 +169,9 @@ module private Blocks =
 
     let renderBlocks blocks =
         blocks |> List.map renderBlock |> List.concat
+        
+    
+
 
 [<AutoOpen>]
 module private Document =
