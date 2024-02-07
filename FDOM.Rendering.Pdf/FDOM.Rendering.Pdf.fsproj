@@ -3,17 +3,22 @@
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarnOn>3390;$(WarnOn)</WarnOn>
-        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
         <PackageProjectUrl>https://github.com/mc738/FDOM</PackageProjectUrl>
         <RepositoryUrl>https://github.com/mc738/FDOM</RepositoryUrl>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Utils.fs" />
         <Compile Include="Renderer.fs" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\FreDF\FreDF.Core\FreDF.Core.fsproj" />
+      <ProjectReference Include="..\FDOM.Core\FDOM.Core.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FreDF.Core" Version="0.1.1" />
     </ItemGroup>
 
 </Project>
