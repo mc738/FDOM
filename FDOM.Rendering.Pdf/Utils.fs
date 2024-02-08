@@ -39,3 +39,6 @@ module Utils =
 
             failwith "Hsl colors not currently supported"
         | _ -> Style.Color.Named value
+
+    let deserializeUnit (value: string) =
+        ()
