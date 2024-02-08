@@ -153,6 +153,8 @@ module private Blocks =
         |> Elements.DocumentElement.Paragraph
 
     let renderListItem (item: DOM.ListItem) =
+        
+        
         Elements.p (renderInlineItems item.Content) // TODO handle list items
 
     let renderList (list: DOM.ListBlock) =
