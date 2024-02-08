@@ -41,4 +41,6 @@ module Utils =
         | _ -> Style.Color.Named value
 
     let deserializeUnit (value: string) =
+        Style.Unit.Pica
+        
         ()
