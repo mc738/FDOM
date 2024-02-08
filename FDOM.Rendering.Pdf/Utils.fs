@@ -41,6 +41,9 @@ module Utils =
         | _ -> Style.Color.Named value
 
     let deserializeUnit (value: string) =
+        match value.EndsWith(v) when
+        | v is "" -> ()
+        
         Style.Unit.Pica
         
         ()
