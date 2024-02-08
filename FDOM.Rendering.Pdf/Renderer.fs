@@ -128,17 +128,22 @@ module private Inline =
 
 [<AutoOpen>]
 module private Blocks =
-    let renderHeader (header: DOM.HeaderBlock) =
-        let tag =
+    let renderHeader (settings: PdfRendererSettings) (header: DOM.HeaderBlock) =
+        let style =
             match header.Level with
-            | DOM.HeaderLevel.H1 -> Elements.h1
-            | DOM.HeaderLevel.H2 -> Elements.h2
-            | DOM.HeaderLevel.H3 -> Elements.h3
-            | DOM.HeaderLevel.H4 -> Elements.h4
-            | DOM.HeaderLevel.H5 -> Elements.h5
-            | DOM.HeaderLevel.H6 -> Elements.h6
-
-        tag (renderInlineItems header.Content)
+            | DOM.HeaderLevel.H1 -> settings.H1Class
+            | DOM.HeaderLevel.H2 -> settings.H2Class
+            | DOM.HeaderLevel.H3 -> settings.H3Class
+            | DOM.HeaderLevel.H4 -> settings.H4Class
+            | DOM.HeaderLevel.H5 -> settings.H5Class
+            | DOM.HeaderLevel.H6 -> settings.H6Class
+            |> Some
+            
+        ({ Elements = renderInlineItems header.Content
+           Format = None
+           Style = style }
+        : Elements.Paragraph)
+        |> Elements.DocumentElement.Paragraph
 
     let renderParagraph (paragraph: DOM.ParagraphBlock) =
         ({ Elements = renderInlineItems paragraph.Content
