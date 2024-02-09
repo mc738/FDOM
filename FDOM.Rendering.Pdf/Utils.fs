@@ -40,7 +40,7 @@ module Utils =
             failwith "Hsl colors not currently supported"
         | _ -> Style.Color.Named value
         
-    let deserializeColor (value: string) =
+    let tryDeserializeColor (value: string) =
         let getByte (values: string array) (index: int) =
             values
             |> Array.tryItem index
@@ -52,27 +52,21 @@ module Utils =
 
 
         match value with
-        | _ when value.StartsWith '#' ->
-            // TODO convert hex to rgba
-            failwith "Hex not currently supported"
-
+        | _ when value.StartsWith '#' -> None
         | _ when value.StartsWith "rgba" ->
             let values = value.Replace("rgba(", "").Replace(")", "").Split(',')
 
             let get = getByte values
 
-            Style.Color.RGBA(get 0, get 1, get 2, get 3)
+            Style.Color.RGBA(get 0, get 1, get 2, get 3) |> Some
         | _ when value.StartsWith "rgb(" ->
             let values = value.Replace("rgb(", "").Replace(")", "").Split(',')
 
             let get = getByte values
 
-            Style.Color.RGBA(get 0, get 1, get 2, 0uy)
-        | _ when value.StartsWith "hsl" ->
-            let values = value.Replace("hsl(", "").Replace(")", "").Split(',')
-
-            failwith "Hsl colors not currently supported"
-        | _ -> Style.Color.Named value
+            Style.Color.RGBA(get 0, get 1, get 2, 0uy) |> Some
+        | _ when value.StartsWith "hsl" -> None
+        | _ -> Style.Color.Named value |> Some
 
     let tryDeserializeUnit (value: string) =
         //match value.EndsWith(v) when
