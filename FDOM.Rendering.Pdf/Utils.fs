@@ -1,5 +1,6 @@
 ﻿namespace FDOM.Rendering
 
+open System
 open FDOM.Core.Common
 open FreDF.Core
 
@@ -71,9 +72,17 @@ module Utils =
     let tryDeserializeUnit (value: string) =
         //match value.EndsWith(v) when
         //| v is "" -> ()
+        let tryParse (str: string) =
+            match Double.TryParse str with
+            | true, v -> Some v
+            | false, _ -> None
+        
         
         match value with
-        | _ when value.EndsWith("cm") -> ()
+        
+        
+        | _ when value.EndsWith("cm") ->
+            value.Replace("cm", "") |> tryParse |> Option.map Style.Unit.Centimeter
         
         
         Style.Unit.Pica
