@@ -87,4 +87,4 @@ module Utils =
             |> Option.map Style.Unit.Millimeter
         | _ when value.EndsWith("cm") -> value.Replace("cm", "") |> tryParse |> Option.map Style.Unit.Centimeter
         | _ when value.EndsWith("mm") -> value.Replace("mm", "") |> tryParse |> Option.map Style.Unit.Millimeter
-        | _ when value.EndsWith("in") -> value.Replace("in", "")
+        | _ when value.EndsWith("in") -> value.Replace("in", "") |> tryParse |> Option.map Style.Unit.Inch
