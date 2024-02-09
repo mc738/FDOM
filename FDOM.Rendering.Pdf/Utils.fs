@@ -90,3 +90,4 @@ module Utils =
         | _ when value.EndsWith("in") -> value.Replace("in", "") |> tryParse |> Option.map Style.Unit.Inch
         | _ when value.EndsWith("pt") -> value.Replace("pt", "") |> tryParse |> Option.map Style.Unit.Point
         | _ when value.EndsWith("pi") -> value.Replace("pi", "") |> tryParse |> Option.map Style.Unit.Pica
+        | _ -> None
