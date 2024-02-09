@@ -40,7 +40,7 @@ module Utils =
 
             failwith "Hsl colors not currently supported"
         | _ -> Style.Color.Named value
-        
+
     let tryDeserializeColor (value: string) =
         let getByte (values: string array) (index: int) =
             values
@@ -76,15 +76,15 @@ module Utils =
             match Double.TryParse str with
             | true, v -> Some v
             | false, _ -> None
-        
-        
+
+
         match value with
-        
-        
-        | _ when value.EndsWith("cm") ->
-            value.Replace("cm", "") |> tryParse |> Option.map Style.Unit.Centimeter
-        
-        
-        Style.Unit.Pica
-        
-        ()
+        | _ when value.EndsWith("px") ->
+            // Pixel to mm -> 1 pixel (X) = 0.2645833333 mm
+            value.Replace("px", "")
+            |> tryParse
+            |> Option.map ((*) 0.2645833333)
+            |> Option.map Style.Unit.Millimeter
+        | _ when value.EndsWith("cm") -> value.Replace("cm", "") |> tryParse |> Option.map Style.Unit.Centimeter
+        | _ when value.EndsWith("mm") -> value.Replace("mm", "") |> tryParse |> Option.map Style.Unit.Millimeter
+        | _ when value.EndsWith("in") -> value.Replace("in", "")
