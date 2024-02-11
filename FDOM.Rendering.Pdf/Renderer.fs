@@ -187,6 +187,21 @@ module private Blocks =
         : Elements.Image)
         |> Elements.DocumentElement.Image
 
+    let renderTable (table: DOM.TableBlock) =
+        ({ Borders = None
+           Format = failwith "todo"
+           Shading = failwith "todo"
+           Style = failwith "todo"
+           TopPadding = failwith "todo"
+           BottomPadding = failwith "todo"
+           LeftPadding = failwith "todo"
+           RightPadding = failwith "todo"
+           KeepTogether = failwith "todo"
+           Columns = failwith "todo"
+           Rows = failwith "todo" }
+        : Elements.Table)
+        |> Elements.DocumentElement.Table
+
     let renderBlock settings block =
         match block with
         | DOM.BlockContent.Header h -> [ renderHeader settings h ]
@@ -199,7 +214,7 @@ module private Blocks =
             failwith "todo"
         | DOM.Table tableBlock -> failwith "todo"
 
-    let renderBlocks setthings blocks =
+    let renderBlocks settings blocks =
         blocks |> List.map (renderBlock settings) |> List.concat
 
 
