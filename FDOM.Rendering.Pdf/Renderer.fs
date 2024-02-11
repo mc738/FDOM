@@ -171,28 +171,19 @@ module private Blocks =
         : Elements.Paragraph)
         |> Elements.DocumentElement.Paragraph
 
-
-    //        Elements.p (renderInlineItems item.Content) // TODO handle list items
-
     let renderList (list: DOM.ListBlock) =
-
-        let tag =
-            match list.Ordered with
-            | true -> "ol"
-            | false -> "ul"
-
-        (list.Items |> List.map renderListItem)
+        (list.Items |> List.map (renderListItem list.Ordered))
 
     let renderImage (image: DOM.ImageBlock) =
         ({ Source = image.Source
-           Height = failwith "todo"
-           Width = failwith "todo"
-           Left = failwith "todo"
-           Top = failwith "todo"
-           Resolution = failwith "todo"
-           ScaleHeight = failwith "todo"
-           ScaleWidth = failwith "todo"
-           LockAspectRatio = failwith "todo" }
+           Height = image.Height |> Option.bind tryDeserializeUnit
+           Width = image.Width |> Option.bind tryDeserializeUnit
+           Left = None // TODO?
+           Top = None // TODO?
+           Resolution = None
+           ScaleHeight = None
+           ScaleWidth = None
+           LockAspectRatio = Some true }
         : Elements.Image)
         |> Elements.DocumentElement.Image
 
