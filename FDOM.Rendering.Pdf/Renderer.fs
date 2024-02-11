@@ -215,13 +215,14 @@ module private Document =
         : Structure.Section)
             .ToDocObj()
 
-    let renderBody settings content =
+    let renderBody settings content (doc: Document) =
         
-        content |> List.map (renderSection settings)
+        content |> List.iter (renderSection settings >> doc.Add >> ignore)
         
+        doc
         //|> List.iter (doc.AddSection >> ignore)
 
 let render (savePath: string) (stylePath: string) (settings: PdfRendererSettings) (document: DOM.Document) =
     Pdf.init stylePath
-    |> Pdf.build (renderBody settings document.Sections)
+    |> renderBody settings document.Sections
     |> Pdf.render savePath
