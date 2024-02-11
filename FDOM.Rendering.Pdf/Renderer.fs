@@ -179,9 +179,9 @@ module private Blocks =
         : Elements.Image)
         |> Elements.DocumentElement.Image
 
-    let renderBlock block =
+    let renderBlock settings block =
         match block with
-        | DOM.BlockContent.Header h -> [ renderHeader h ]
+        | DOM.BlockContent.Header h -> [ renderHeader settings h ]
         | DOM.BlockContent.Paragraph p -> [ renderParagraph p ]
         | DOM.BlockContent.List l -> renderList l
         | DOM.BlockContent.Image i -> [ renderImage i ]
@@ -191,8 +191,8 @@ module private Blocks =
             failwith "todo"
         | DOM.Table tableBlock -> failwith "todo"
 
-    let renderBlocks blocks =
-        blocks |> List.map renderBlock |> List.concat
+    let renderBlocks setthings blocks =
+        blocks |> List.map (renderBlock settings) |> List.concat
 
 
     let elementBuilder (elements: Elements.DocumentElement list) (section: MigraDocCore.DocumentObjectModel.Section) =
@@ -211,14 +211,14 @@ module private Document =
         ({ PageSetup = settings.DefaultSectionPageSetup
            Headers = failwith "todo"
            Footers = failwith "todo"
-           Elements = renderBlocks section.Content }
+           Elements = renderBlocks settings section.Content }
         : Structure.Section)
             .ToDocObj()
 
 
-    let renderBody content = content |> List.map renderSection
+    let renderBody settings content = content |> List.map (renderSection settings)
 
-let render (savePath: string) (stylePath: string) (document: DOM.Document) =
+let render (savePath: string) (stylePath: string) (settings: PdfRendererSettings) (document: DOM.Document) =
     Pdf.init stylePath
-    |> Pdf.build (renderBody document.Sections)
+    |> Pdf.build (renderBody settings document.Sections)
     |> Pdf.render savePath
