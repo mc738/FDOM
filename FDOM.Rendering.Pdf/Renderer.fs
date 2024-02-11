@@ -26,7 +26,7 @@ type PdfRendererSettings =
           DefaultUnderLineType = Style.Underline.Single
           DefaultSectionPageSetup = None
           DefaultSectionHeader = None
-          DefaultSectionFooter = None 
+          DefaultSectionFooter = None
           H1Class = "Header1"
           H2Class = "Header2"
           H3Class = "Header3"
@@ -138,7 +138,7 @@ module private Blocks =
             | DOM.HeaderLevel.H5 -> settings.H5Class
             | DOM.HeaderLevel.H6 -> settings.H6Class
             |> Some
-            
+
         ({ Elements = renderInlineItems header.Content
            Format = None
            Style = style }
@@ -152,10 +152,27 @@ module private Blocks =
         : Elements.Paragraph)
         |> Elements.DocumentElement.Paragraph
 
-    let renderListItem (item: DOM.ListItem) =
-        
-        
-        Elements.p (renderInlineItems item.Content) // TODO handle list items
+    let renderListItem (ordered: bool) (item: DOM.ListItem) =
+        ({ Elements = renderInlineItems item.Content
+           Format =
+             { Style.ParagraphFormat.Blank() with
+                 ListInfo =
+                     ({ ListType =
+                         Some
+                         <| match ordered with
+                            | true -> Style.ListType.NumberList1
+                            | false -> Style.ListType.BulletList1
+                        NumberPosition = None
+                        ContinuePreviousList = Some true }
+                     : Style.ListInfo)
+                     |> Some }
+             |> Some
+           Style = None }
+        : Elements.Paragraph)
+        |> Elements.DocumentElement.Paragraph
+
+
+    //        Elements.p (renderInlineItems item.Content) // TODO handle list items
 
     let renderList (list: DOM.ListBlock) =
 
@@ -216,11 +233,11 @@ module private Document =
             .ToDocObj()
 
     let renderBody settings content (doc: Document) =
-        
+
         content |> List.iter (renderSection settings >> doc.Add >> ignore)
-        
+
         doc
-        //|> List.iter (doc.AddSection >> ignore)
+//|> List.iter (doc.AddSection >> ignore)
 
 let render (savePath: string) (stylePath: string) (settings: PdfRendererSettings) (document: DOM.Document) =
     Pdf.init stylePath
