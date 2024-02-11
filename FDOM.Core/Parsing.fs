@@ -37,6 +37,8 @@ module BlockParser =
         | _ when Char.IsDigit(line.[0]) && (line.[1] = '.' || line.[2] = '.') -> LineType.OrderedListItem // A bit of a hack to look for ordered lists. This can be cleaned up!
         | _ when line.[0] = '!' -> LineType.Image
         | _ when line.[0] = '|' -> LineType.Table
+        // TODO handle inline metadata
+        //| _ when line.[0] = '#' && line.[1] = '{' -> LineType.InlineMetadata
         | _ -> LineType.Text
 
     [<RequireQualifiedAccess>]
