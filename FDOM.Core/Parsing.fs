@@ -194,7 +194,7 @@ module BlockParser =
         | Some l when l.Type <> LineType.Table -> Error()
         | Some l -> Ok(BlockToken.Table l.Text, curr)
 
-    let tryParseInline (input: Input) curr =
+    let tryParseInlineMetadata (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.InlineMetadata -> Error()
@@ -219,6 +219,7 @@ module BlockParser =
               tryParseParagraph formatter
               tryParseImage
               tryParseTable
+              tryParseInlineMetadata
               tryParseEmptyBlock ]
             |> List.fold
                 (fun state h ->
