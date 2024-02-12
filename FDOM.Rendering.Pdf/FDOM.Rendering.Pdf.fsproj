@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <Compile Include="Utils.fs" />
+        <Compile Include="Preprocessors.fs" />
         <Compile Include="Renderer.fs" />
     </ItemGroup>
 
