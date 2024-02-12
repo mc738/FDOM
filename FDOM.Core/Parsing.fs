@@ -194,7 +194,11 @@ module BlockParser =
         | Some l when l.Type <> LineType.Table -> Error()
         | Some l -> Ok(BlockToken.Table l.Text, curr)
 
-    let tryParseInline
+    let tryParseInline (input: Input) curr =
+        match input.TryGetLine curr with
+        | None -> Error()
+        | Some l when l.Type <> LineType.InlineMetadata -> Error()
+        | Some l -> Ok(BlockToken.InlineMetadata l.Text, curr)
     
     let tryParseEmptyBlock (input: Input) curr =
         match input.TryGetLine curr with
