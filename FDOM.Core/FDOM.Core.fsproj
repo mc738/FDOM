@@ -17,6 +17,7 @@
         <Compile Include="Dsl.fs" />
         <Compile Include="Parsing.fs" />
         <Compile Include="Serialization.fs" />
+        <Compile Include="Rendering.fs" />
     </ItemGroup>
 
 </Project>
