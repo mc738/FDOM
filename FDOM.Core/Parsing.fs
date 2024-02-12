@@ -50,6 +50,7 @@ module BlockParser =
         | CodeBlock of string option * string
         | Image of string
         | Table of string
+        | InlineMetadata of string
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -193,6 +194,8 @@ module BlockParser =
         | Some l when l.Type <> LineType.Table -> Error()
         | Some l -> Ok(BlockToken.Table l.Text, curr)
 
+    let tryParseInline
+    
     let tryParseEmptyBlock (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
@@ -584,6 +587,9 @@ module Processing =
 
                         (createTable collected, remaining)
 
+                    | BlockParser.BlockToken.InlineMetadata v ->
+                        
+                        (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
                     | BlockParser.BlockToken.Empty _ ->
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
 
