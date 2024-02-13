@@ -118,6 +118,7 @@ module DOM =
         | Text of InlineText
         | Span of InlineSpan
         | Link of InlineLink
+        | FootnoteReference of Reference: string
 
         static member GetRawText(content: InlineContent list) =
             content
