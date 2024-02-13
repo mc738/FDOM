@@ -88,6 +88,10 @@ module DOM =
           ColumnIndex: int
           Content: InlineContent list }
 
+    and FootnoteBlock =
+        { Name: string
+          Paragraphs: ParagraphBlock }
+
     and BlockContent =
         | Header of HeaderBlock
         | Paragraph of ParagraphBlock
@@ -95,6 +99,7 @@ module DOM =
         | List of ListBlock
         | Image of ImageBlock
         | Table of TableBlock
+        | FootNote of FootnoteBlock
 
         member bc.GetRawText() =
             match bc with
@@ -126,7 +131,8 @@ module DOM =
                 match c with
                 | InlineContent.Text t -> t.Content
                 | InlineContent.Span s -> s.Content
-                | InlineContent.Link l -> l.Content)
+                | InlineContent.Link l -> l.Content
+                | InlineContent.FootnoteReference reference -> $"({reference})")
             |> String.concat ""
 
         member ic.Append(str: string) =
@@ -346,13 +352,11 @@ module Formatting =
 
 [<RequireQualifiedAccess>]
 module PredefinedStyleRefs =
-    
+
     let bold = "b"
-    
+
     let italics = "i"
-    
+
     let underline = "ul"
-    
+
     let code = "code"
-    
-    
