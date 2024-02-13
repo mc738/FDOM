@@ -370,7 +370,11 @@ module InlineParser =
                         let text, next = readUntilChar input ']' true (i + 1)
 
                         match text.StartsWith('^') with
-                        | true -> failwith ""
+                        | true ->
+                            let content =
+                                DOM.InlineContent.FootnoteReference <| text.Remove(0, 1)
+                            
+                            (state @ [ content ], next)
                         | false ->
                             // If thr
                             let url, next = readUntilChar input ')' true (next + 1)
