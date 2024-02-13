@@ -365,17 +365,23 @@ module InlineParser =
 
                         (state @ [ content ], next)
                     | '[' ->
+                        // '[' can either be a link or foot not
+                        
                         let text, next = readUntilChar input ']' true (i + 1)
 
-                        let url, next = readUntilChar input ')' true (next + 1)
+                        match text.StartsWith('^') with
+                        | true -> failwith ""
+                        | false ->
+                            // If thr
+                            let url, next = readUntilChar input ')' true (next + 1)
 
-                        let content =
-                            DOM.InlineContent.Link
-                                { Content = text
-                                  Url = url
-                                  Style = DOM.Style.Default }
+                            let content =
+                                DOM.InlineContent.Link
+                                    { Content = text
+                                      Url = url
+                                      Style = DOM.Style.Default }
 
-                        (state @ [ content ], next)
+                            (state @ [ content ], next)
                     | '_' ->
                         // To fix issue #8 and #9
                         // Read until next control character and append to prev?
