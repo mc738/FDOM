@@ -137,7 +137,6 @@ type BlockParsing() =
 
         Assert.AreEqual(expected, actual)
 
-
     [<TestMethod>]
     member this.``Parse 2 ordered list items``() =
 
