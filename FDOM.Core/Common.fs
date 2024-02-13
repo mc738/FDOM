@@ -149,7 +149,7 @@ module DOM =
                 { il with
                     Content = $"{il.Content}{str}" }
                 |> InlineContent.Link
-            | FootnoteReference reference -> failwith "todo"
+            | FootnoteReference reference -> ic
 
     and Section =
         { Style: Style
