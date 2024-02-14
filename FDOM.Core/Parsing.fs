@@ -21,8 +21,8 @@ module BlockParser =
         | Table
         | InlineMetadata
         | Footnote
-        | BlockQuote
         | IndentedText
+        | BlockQuote
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -91,6 +91,15 @@ module BlockParser =
             let rec handler (state, i) =
                 match input.TryGetLine i with
                 | Some l when l.Type <> lineType -> state, i
+                | Some l -> handler (state @ [ l ], i + 1)
+                | None -> state, input.LineCount - 1
+
+            handler ([], curr)
+            
+        member input.TryGetUntilNotTypesOrEnd(curr, lineTypes: LineType list) =
+            let rec handler (state, i) =
+                match input.TryGetLine i with
+                | Some l when lineTypes |> List.contains l.Type |> not -> state, i
                 | Some l -> handler (state @ [ l ], i + 1)
                 | None -> state, input.LineCount - 1
 
