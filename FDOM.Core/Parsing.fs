@@ -43,6 +43,7 @@ module BlockParser =
         | _ when line.[0] = '|' -> LineType.Table
         | _ when line.[0] = '#' && line.[1] = '{' -> LineType.InlineMetadata
         | _ when line.[0] = '>' -> LineType.BlockQuote
+        | _ when line.[0] = ' ' || line.[0] = '\t' -> LineType.IndentedText 
         | _ -> LineType.Text
 
     [<RequireQualifiedAccess>]
@@ -121,7 +122,8 @@ module BlockParser =
         | None -> Error()
         | Some l when l.Type <> LineType.Text -> Error()
         | _ ->
-            let lines, next = input.TryGetUntilNotTypeOrEnd(curr, LineType.Text)
+            // This looks for text or indented text because paragraph lines could start with a space.
+            let lines, next = input.TryGetUntilNotTypesOrEnd(curr, [ LineType.Text; LineType.IndentedText ])
 
             Ok(BlockToken.Paragraph(formatter lines), next)
 
@@ -216,7 +218,7 @@ module BlockParser =
     let tryParseFootnote (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
-        | Some l when l.Type <> LineType.
+        | Some l when l.Type <> LineType.Footnote -> Error()
     
     let tryParseBlockQuote (input: Input) curr =
         

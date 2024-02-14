@@ -209,6 +209,47 @@ type BlockParsing() =
 
         Assert.AreEqual(expected, actual)
 
+    [<TestMethod>]    
+    member this.``Parse paragraph with space indented line``() =
+        let input = [ "This is a paragraph,"; " with an indented line." ] |> Input.Create
+        
+        let expected = [ BlockToken.Paragraph "This is a paragraph, with an indented line." ]
+        
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+        
+    [<TestMethod>]    
+    member this.``Parse paragraph with tab indented line``() =
+        let input = [ "This is a paragraph,"; "\twith an indented line." ] |> Input.Create
+        
+        let expected = [ BlockToken.Paragraph "This is a paragraph, with an indented line." ]
+        
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+
+    [<TestMethod>]    
+    member this.``Parse paragraph extra space``() =
+        let input = [ "This is a paragraph,    "; "with extra space." ] |> Input.Create
+        
+        let expected = [ BlockToken.Paragraph "This is a paragraph, with extra space." ]
+        
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+        
+    [<TestMethod>]    
+    member this.``Parse paragraph extra space 2``() =
+        let input = [ "   This is a paragraph,    "; "    with extra space.    " ] |> Input.Create
+        
+        let expected = [ BlockToken.Paragraph "This is a paragraph, with extra space." ]
+        
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+    
+
 [<TestClass>]
 type InlineParsing() =
 
