@@ -20,6 +20,7 @@ module BlockParser =
         | Image
         | Table
         | InlineMetadata
+        | BlockQuote
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -39,6 +40,7 @@ module BlockParser =
         | _ when line.[0] = '!' -> LineType.Image
         | _ when line.[0] = '|' -> LineType.Table
         | _ when line.[0] = '#' && line.[1] = '{' -> LineType.InlineMetadata
+        | _ when line.[0] = '>' -> LineType.BlockQuote
         | _ -> LineType.Text
 
     [<RequireQualifiedAccess>]
