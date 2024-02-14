@@ -293,6 +293,21 @@ type InlineParsing() =
         let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
+        
+    [<TestMethod>]
+    member _.``Parse paragraph with footnote``() =
+
+        let input = "This is a footnote[^1], hopefully it works!"
+
+        let expected =
+            [ DOM.InlineContent.Text { Content = "This is a footnote" }
+              DOM.InlineContent.FootnoteReference "1"
+              DOM.InlineContent.Text { Content = ", hopefully it works!" } ]
+
+        let actual = InlineParser.parseInlineContent input
+
+        Assert.AreEqual(expected, actual)
+        
 
     /// <summary>Test for fix to issues #8 and #9</summary>
     [<TestMethod>]
@@ -321,7 +336,6 @@ type InlineParsing() =
 
         Assert.AreEqual(expected, actual)
 
-
     /// <summary>Test for fix to issues #8 and #4</summary>
     [<TestMethod>]
     member _.``Parse inline span content to line end with b and i``() =
@@ -336,7 +350,6 @@ type InlineParsing() =
         let actual = InlineParser.parseInlineContent input
 
         Assert.AreEqual(expected, actual)
-
 
     /// <summary>Test for fix to issues #8 and #4</summary>
     [<TestMethod>]
