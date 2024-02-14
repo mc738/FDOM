@@ -56,6 +56,8 @@ module BlockParser =
         | Image of Text: string
         | Table of Text: string
         | InlineMetadata of Text: string
+        | Footnote of Text: string
+        | BlockQuote of Text: string
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -120,7 +122,7 @@ module BlockParser =
     let tryParseParagraph (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
-        | Some l when l.Type <> LineType.Text -> Error()
+        | Some l when l.Type <> LineType.Text && l.Type <> LineType.IndentedText -> Error()
         | _ ->
             // This looks for text or indented text because paragraph lines could start with a space.
             let lines, next = input.TryGetUntilNotTypesOrEnd(curr, [ LineType.Text; LineType.IndentedText ])
@@ -219,6 +221,11 @@ module BlockParser =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.Footnote -> Error()
+        | Some l ->
+            
+            
+            
+            Ok (BlockToken.Header)
     
     let tryParseBlockQuote (input: Input) curr =
         
