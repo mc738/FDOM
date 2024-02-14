@@ -20,7 +20,9 @@ module BlockParser =
         | Image
         | Table
         | InlineMetadata
+        | Footnote
         | BlockQuote
+        | IndentedText
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -202,6 +204,15 @@ module BlockParser =
         | Some l when l.Type <> LineType.InlineMetadata -> Error()
         | Some l -> Ok(BlockToken.InlineMetadata l.Text, curr)
 
+    let tryParseFootnote (input: Input) curr =
+        match input.TryGetLine curr with
+        | None -> Error()
+        | Some l when l.Type <> LineType.
+    
+    let tryParseBlockQuote (input: Input) curr =
+        
+        ()
+     
     let tryParseEmptyBlock (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
