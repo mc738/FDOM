@@ -97,6 +97,16 @@ type BlockParsing() =
 
         Assert.AreEqual(expected, actual)
 
+    [<TestMethod>]        
+    member this.``Parse code block with language``() =
+        let input = Input.Create([ "```lang"; "let msg = \"Hello, World!\""; "```" ])
+
+        let expected = [ BlockToken.CodeBlock(Some "lang", "let msg = \"Hello, World!\"") ]
+
+        let actual = parseBlocks input
+
+        Assert.AreEqual(expected, actual)
+
     [<TestMethod>]
     member this.``Parse header and paragraph``() =
 
