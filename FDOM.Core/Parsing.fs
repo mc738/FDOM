@@ -43,14 +43,14 @@ module BlockParser =
 
     [<RequireQualifiedAccess>]
     type BlockToken =
-        | Paragraph of string
-        | Header of string
-        | OrderListItem of string
-        | UnorderedListItem of string
-        | CodeBlock of string option * string
-        | Image of string
-        | Table of string
-        | InlineMetadata of string
+        | Paragraph of Text: string
+        | Header of Text: string
+        | OrderListItem of Text: string
+        | UnorderedListItem of Text: string
+        | CodeBlock of Language: string option * Text: string
+        | Image of Text: string
+        | Table of Text: string
+        | InlineMetadata of Text: string
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -199,7 +199,7 @@ module BlockParser =
         | None -> Error()
         | Some l when l.Type <> LineType.InlineMetadata -> Error()
         | Some l -> Ok(BlockToken.InlineMetadata l.Text, curr)
-    
+
     let tryParseEmptyBlock (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
@@ -345,8 +345,10 @@ module InlineParser =
                         let (sub, next), classes =
                             match lookAhead input i 1, lookAhead input i 2 with
                             | Some c1, Some c2 when c1 = '*' && c2 = '*' ->
-                                readUntilString input "***" true i |> trimEnd 3, [ PredefinedStyleRefs.bold; PredefinedStyleRefs.italics ]
-                            | Some c1, _ when c1 = '*' -> readUntilString input "**" true i |> trimEnd 2, [ PredefinedStyleRefs.bold ]
+                                readUntilString input "***" true i |> trimEnd 3,
+                                [ PredefinedStyleRefs.bold; PredefinedStyleRefs.italics ]
+                            | Some c1, _ when c1 = '*' ->
+                                readUntilString input "**" true i |> trimEnd 2, [ PredefinedStyleRefs.bold ]
                             | _ -> readUntilChar input '*' true (i + 1), [ PredefinedStyleRefs.italics ]
 
                         let content =
@@ -366,14 +368,13 @@ module InlineParser =
                         (state @ [ content ], next)
                     | '[' ->
                         // '[' can either be a link or foot not
-                        
+
                         let text, next = readUntilChar input ']' true (i + 1)
 
                         match text.StartsWith('^') with
                         | true ->
-                            let content =
-                                DOM.InlineContent.FootnoteReference <| text.Remove(0, 1)
-                            
+                            let content = DOM.InlineContent.FootnoteReference <| text.Remove(0, 1)
+
                             (state @ [ content ], next)
                         | false ->
                             // If thr
@@ -503,7 +504,7 @@ module Processing =
             l.Split('|', StringSplitOptions.TrimEntries)
 
         // TODO add check/handling for 2nd line containing ----
-        
+
         let createColumns (line1: string) (line2: string option) =
             line1
             |> cleanLine
@@ -518,7 +519,11 @@ module Processing =
 
         // First check if the table has at least 2 lines
         match values.Length with
-        | 0 -> DOM.BlockContent.Table { Style = Style.none; Columns = []; Rows = [] }
+        | 0 ->
+            DOM.BlockContent.Table
+                { Style = Style.none
+                  Columns = []
+                  Rows = [] }
         | 1 ->
             DOM.BlockContent.Table
                 { Style = Style.none
@@ -533,16 +538,16 @@ module Processing =
             let _, rows = values |> List.splitAt 2
 
             let createRow (line: string) =
-                ({  Style = Style.none
-                    Cells =
-                    cleanLine line
-                    |> splitLine
-                    |> List.ofArray
-                    |> List.mapi (fun i c ->
-                        ({ Style = Style.none
-                           ColumnIndex = i
-                           Content = InlineParser.parseInlineContent c }
-                        : DOM.TableCell)) }
+                ({ Style = Style.none
+                   Cells =
+                     cleanLine line
+                     |> splitLine
+                     |> List.ofArray
+                     |> List.mapi (fun i c ->
+                         ({ Style = Style.none
+                            ColumnIndex = i
+                            Content = InlineParser.parseInlineContent c }
+                         : DOM.TableCell)) }
                 : DOM.TableRow)
 
             DOM.BlockContent.Table
@@ -603,7 +608,7 @@ module Processing =
                         (createTable collected, remaining)
 
                     | BlockParser.BlockToken.InlineMetadata v ->
-                        
+
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
                     | BlockParser.BlockToken.Empty _ ->
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
