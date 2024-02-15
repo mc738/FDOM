@@ -271,6 +271,8 @@ module BlockParser =
 
         handler ([], 0)
 
+open BlockParser
+
 /// The inline parse takes block tokens and creates a DOM.
 module InlineParser =
 
@@ -643,6 +645,8 @@ module Processing =
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
                     | BlockParser.BlockToken.Empty _ ->
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
+                    | BlockToken.Footnote text -> failwith "todo"
+                    | BlockToken.BlockQuote text -> failwith "todo"
 
                 handler (append processedBlocks newBlock, newRemainingBlocks)
 
