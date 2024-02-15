@@ -56,6 +56,8 @@ module BlockParser =
         | Image of Text: string
         | Table of Text: string
         | InlineMetadata of Text: string
+        | Footnote of Text: string
+        | BlockQuote of Text: string
         | Empty
 
     [<RequireQualifiedAccess>]
@@ -120,7 +122,7 @@ module BlockParser =
     let tryParseParagraph (formatter: Line list -> string) (input: Input) curr =
         match input.TryGetLine curr with
         | None -> Error()
-        | Some l when l.Type <> LineType.Text -> Error()
+        | Some l when l.Type <> LineType.Text && l.Type <> LineType.IndentedText -> Error()
         | _ ->
             // This looks for text or indented text because paragraph lines could start with a space.
             let lines, next = input.TryGetUntilNotTypesOrEnd(curr, [ LineType.Text; LineType.IndentedText ])
@@ -219,6 +221,11 @@ module BlockParser =
         match input.TryGetLine curr with
         | None -> Error()
         | Some l when l.Type <> LineType.Footnote -> Error()
+        | Some l ->
+            
+            
+            
+            Ok (BlockToken.Header)
     
     let tryParseBlockQuote (input: Input) curr =
         
@@ -263,6 +270,8 @@ module BlockParser =
             | None -> state
 
         handler ([], 0)
+
+open BlockParser
 
 /// The inline parse takes block tokens and creates a DOM.
 module InlineParser =
@@ -636,6 +645,8 @@ module Processing =
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
                     | BlockParser.BlockToken.Empty _ ->
                         (p Style.none [ DOM.InlineContent.Text { Content = "" } ], remainingBlocks.Tail)
+                    | BlockToken.Footnote text -> failwith "todo"
+                    | BlockToken.BlockQuote text -> failwith "todo"
 
                 handler (append processedBlocks newBlock, newRemainingBlocks)
 

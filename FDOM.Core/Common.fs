@@ -91,6 +91,11 @@ module DOM =
     and FootnoteBlock =
         { Name: string
           Paragraphs: ParagraphBlock }
+        
+    and BlockQuoteBlock =
+        {
+            Content: BlockContent list
+        }
 
     and BlockContent =
         | Header of HeaderBlock
@@ -100,6 +105,7 @@ module DOM =
         | Image of ImageBlock
         | Table of TableBlock
         | FootNote of FootnoteBlock
+        | BlockQuote of BlockQuoteBlock
 
         member bc.GetRawText() =
             match bc with
@@ -254,7 +260,6 @@ module DOM =
 
     let createSpan style text =
         InlineContent.Span { Style = style; Content = text }
-
 
     let createLink style text url =
         InlineContent.Link
