@@ -486,7 +486,6 @@ module Processing =
             (Style.references [ lang |> Option.map (fun l -> $"language-{l}") |> Option.defaultValue "" ])
             [ DOM.InlineContent.Text { Content = value } ]
 
-
     let createImageBlock (value: string) =
         // Split the image into parts.
 
@@ -513,7 +512,6 @@ module Processing =
                 (None, None)
 
         img Style.none url title altText height width
-
 
     let createListItem (value: string) =
         li Style.none (InlineParser.parseInlineContent value)
