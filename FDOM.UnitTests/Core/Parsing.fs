@@ -514,3 +514,32 @@ type Processing() =
         let actual = Processing.createTable lines
 
         Assert.AreEqual(expected, actual)
+
+    
+    [<TestMethod>]
+    member _.``Parse basic metadata`` () =
+        Assert.Fail("TODO - implement")
+        
+    
+    [<TestMethod>]
+    member _.``Parse basic metadata including commas in the value`` () =
+        Assert.Fail("TODO - implement")
+    
+    [<TestMethod>]
+    member _.``Extract basic metadata`` () =
+        let lines =
+            [
+                "<meta name=\"key1\" content=\"value1\">"
+                "<meta name=\"key2\" content=\"value2\">"
+                ""
+                "# Content"
+                "Body"
+            ]
+        
+        let expected =
+            ([ "key1", "value1"; "key2", "value2";  ] |> Map.ofList, [ "# Content"; "Body" ])
+        
+        let actual = Parser.ExtractMetadata(lines)
+        
+        Assert.AreEqual(expected, actual)
+        
