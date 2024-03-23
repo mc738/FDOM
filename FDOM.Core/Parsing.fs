@@ -640,6 +640,16 @@ module Processing =
                 handler (append processedBlocks newBlock, newRemainingBlocks)
 
         handler ([], blocks)
+        
+    let parseMetadataKeyValue (line: string) =
+        //let parse =
+        let name = Regex.Match(line, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
+
+        let content = Regex.Match(line, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
+
+        match name.Success, content.Success with
+        | true, true -> Some(name.Value, content.Value)
+        | _ -> None
 
 type Parser(blocks: BlockParser.BlockToken list) =
 
@@ -665,16 +675,7 @@ type Parser(blocks: BlockParser.BlockToken list) =
 
             let metadata =
                 rawMetadata
-                |> List.choose (fun rmd ->
-
-                    //let parse =
-                    let name = Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
-
-                    let content = Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
-
-                    match name.Success, content.Success with
-                    | true, true -> Some(name.Value, content.Value)
-                    | _ -> None)
+                |> List.choose Processing.parseMetadataKeyValue
                 |> Map.ofList
 
             metadata, remaining
@@ -712,16 +713,7 @@ type Parser(blocks: BlockParser.BlockToken list) =
 
         let metadata =
             rawMetadata
-            |> List.choose (fun rmd ->
-
-                //let parse =
-                let name = Regex.Match(rmd, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
-
-                let content = Regex.Match(rmd, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
-
-                match name.Success, content.Success with
-                | true, true -> Some(name.Value, content.Value)
-                | _ -> None)
+            |> List.choose Processing.parseMetadataKeyValue
             |> Map.ofList
 
         Parser(BlockParser.parseBlocks input), metadata
