@@ -645,7 +645,7 @@ module Processing =
         //let parse =
         let name = Regex.Match(line, """(?<=(<meta name="))([A-Za-z0-9\-:_]+)""")
 
-        let content = Regex.Match(line, """(?<=(content="))([A-Za-z0-9\-_\s]+)""")
+        let content = Regex.Match(line, """(?<=(content="))([A-Za-z0-9\-:_\s\#\%]+)""")
 
         match name.Success, content.Success with
         | true, true -> Some(name.Value, content.Value)
