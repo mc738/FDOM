@@ -3,7 +3,9 @@ module FDOM.Core.Parsing
 open System
 open System.Runtime.Serialization
 open System.Text
+open System.Text.Encodings.Web
 open System.Text.RegularExpressions
+open System.Web
 open FDOM.Core.Common
 open FDOM.Core.Common.Formatting
 
@@ -648,7 +650,7 @@ module Processing =
         let content = Regex.Match(line, """(?<=(content="))([A-Za-z0-9\-:_\s\#\%]+)""")
 
         match name.Success, content.Success with
-        | true, true -> Some(name.Value, content.Value)
+        | true, true -> Some(name.Value, content.Value |> HttpUtility.UrlDecode)
         | _ -> None
 
 type Parser(blocks: BlockParser.BlockToken list) =
