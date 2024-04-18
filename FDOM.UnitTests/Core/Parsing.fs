@@ -518,13 +518,37 @@ type Processing() =
     
     [<TestMethod>]
     member _.``Parse basic metadata`` () =
-        Assert.Fail("TODO - implement")
+        let expected = Some("key", "value")
+        
+        let actual = Processing.parseMetadataKeyValue "<meta name=\"key\" content=\"value\">"
+        
+        Assert.AreEqual(expected, actual)
+        
+    [<TestMethod>]
+    member _.``Parse basic metadata including commas in the value`` () =
+        let expected = Some("key", "value1,value2")
+        
+        let actual = Processing.parseMetadataKeyValue "<meta name=\"key\" content=\"value1,value2\">"
+        
+        Assert.AreEqual(expected, actual)
+    
+    [<TestMethod>]
+    member _.``Parse basic metadata including hash in the value`` () =
+        let expected = Some("key", "value#")
+        
+        let actual = Processing.parseMetadataKeyValue "<meta name=\"key\" content=\"value#\">"
+        
+        Assert.AreEqual(expected, actual)
         
     
     [<TestMethod>]
-    member _.``Parse basic metadata including commas in the value`` () =
-        Assert.Fail("TODO - implement")
-    
+    member _.``Parse basic metadata including url encoded content in the value`` () =
+        let expected = Some("key", "value 1")
+        
+        let actual = Processing.parseMetadataKeyValue "<meta name=\"key\" content=\"value%201\">"
+        
+        Assert.AreEqual(expected, actual)
+        
     [<TestMethod>]
     member _.``Extract basic metadata`` () =
         let lines =
